@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CA Final | War Room V17.3</title>
+    <title>CA Final | War Room V17.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -34,7 +34,7 @@
         <div class="flex items-center justify-between">
             <button onclick="toggleDrawer()" class="p-2"><i data-lucide="menu" class="w-5 h-5"></i></button>
             <button onclick="showSubjects()" class="flex flex-col items-center group active:scale-95 transition-transform">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/CA_India_Logo.png" alt="CA Logo" class="h-8 w-auto mb-1">
+                <img src="CA India Logo.png" alt="CA Logo" class="h-10 w-auto mb-1 object-contain" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/CA_India_Logo.png/640px-CA_India_Logo.png'">
                 <h1 class="text-[8px] font-black tracking-widest uppercase italic">WAR ROOM</h1>
                 <div id="countdown" class="text-[7px] mono text-yellow-500 font-bold uppercase">LOADING...</div>
             </button>
@@ -109,6 +109,7 @@
     </div>
 
     <script>
+        // --- THE EXHAUSTIVE SYLLABUS (DOUBLE CHECKED) ---
         const syllabus = {
             "Financial Reporting": { chapters: ["Ind AS 1, 8, 10, 34, 113", "Asset Based Ind AS (16, 23, 36, 37, 38, 40, 105, 116)", "Ind AS 19, 33, 102", "Ind AS 12, 21", "Ind AS 115 (Revenue)", "Financial Instruments (32, 109, 107)", "Business Combinations (103)", "Consolidated FS", "Accounting for Carbon Credits", "Professional Ethics"] },
             "Adv Financial Mgmt": { chapters: ["Financial Policy", "Risk Mgmt", "Advanced Capital Budgeting", "Security Valuation", "Portfolio Mgmt", "Mutual Funds", "Derivatives", "Forex Mgmt", "Interest Rate Risk", "Business Valuation", "Mergers & Acquisitions", "Startup Finance"] },
@@ -122,16 +123,15 @@
         let studyData = JSON.parse(localStorage.getItem('caWarRoom_V17')) || { chapters: {}, logs: {} };
         let libraryLinks = JSON.parse(localStorage.getItem('caWarRoomLinks')) || [{ name: "ICAI BOS", url: "https://www.icai.org" }];
         
+        // --- TIMER ENGINE (CLOCK-SYNCED) ---
         let currentMode = 'normal', timerInterval, isPaused = false, activeSub = "", activeChap = "";
         let startTime = 0, accumulatedTime = 0, targetPomoSec = 0;
         let chartInstance = null;
 
-        // --- UI LOGIC ---
         function toggleDrawer() { document.getElementById('library-drawer').classList.toggle('open'); renderLibrary(); }
         function toggleView(v) { document.getElementById('stats-view').classList.toggle('active', v === 'stats'); if(v==='stats'){renderAnalytics(); renderCalendar();} }
         function setGlobalMode(m) { currentMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${m}`)); }
 
-        // --- CLOCK-SYNC TIMER ENGINE ---
         function startBattle(sub, chap) {
             activeSub = sub; activeChap = chap;
             if(currentMode === 'pomo') document.getElementById('pomo-setup').classList.add('active');
@@ -195,7 +195,7 @@
         function exitBattle() { clearInterval(timerInterval); document.getElementById('battle-mode').classList.remove('active'); renderMenu(); if(activeSub !== "MOCK") renderChapters(activeSub); }
         function save() { localStorage.setItem('caWarRoom_V17', JSON.stringify(studyData)); }
 
-        // --- NAVIGATION ---
+        // --- UI RENDERING ---
         function renderMenu() {
             const container = document.getElementById('subject-grid-view');
             container.innerHTML = Object.keys(syllabus).map(sub => {
@@ -236,7 +236,6 @@
         }
         function showSubjects() { document.getElementById('chapter-list-view').classList.add('hidden'); document.getElementById('subject-grid-view').classList.remove('hidden'); renderMenu(); }
 
-        // --- LIBRARY & ANALYTICS ---
         function renderLibrary() {
             const list = document.getElementById('link-list');
             list.innerHTML = libraryLinks.map((link, i) => `
@@ -251,6 +250,7 @@
             if(name && url) { libraryLinks.push({ name, url: url.startsWith('http') ? url : 'https://' + url }); localStorage.setItem('caWarRoomLinks', JSON.stringify(libraryLinks)); document.getElementById('link-name').value = ''; document.getElementById('link-url').value = ''; renderLibrary(); }
         }
         function deleteLink(i) { libraryLinks.splice(i, 1); localStorage.setItem('caWarRoomLinks', JSON.stringify(libraryLinks)); renderLibrary(); }
+
         function renderAnalytics() {
             const ctx = document.getElementById('subjectChart').getContext('2d');
             const totals = {}; Object.keys(syllabus).forEach(s => totals[s] = 0);
@@ -270,7 +270,6 @@
             sortedDates.forEach(date => { const subs = Object.entries(studyData.logs[date]).map(([s, t]) => `${s}: ${(t/3600).toFixed(1)}h`).join(', '); logList.innerHTML += `<div class="glass p-3 rounded-xl text-[10px] flex justify-between font-bold uppercase"><span>${date}</span><span class="opacity-50">${subs}</span></div>`; });
         }
 
-        // --- SYSTEM ---
         function toggleTheme() { document.body.classList.toggle('light-mode'); }
         function exportData() { const blob = new Blob([JSON.stringify(studyData)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'WarRoom_Backup.json'; a.click(); }
         function clearData() { if(confirm("Clear all?")) { localStorage.clear(); location.reload(); } }
