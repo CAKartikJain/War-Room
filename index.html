@@ -25,53 +25,19 @@
             --border: rgba(148, 163, 184, 0.3);
         }
         
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Inter', sans-serif; 
-            transition: background 0.3s, color 0.3s; 
-            touch-action: manipulation; 
-        }
-
-        .glass { 
-            background: var(--card); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid var(--border); 
-            color: var(--text);
-        }
-
-        .full-overlay { 
-            position: fixed; 
-            inset: 0; 
-            z-index: 100; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            transform: translateY(100%); 
-            background: var(--bg);
-        }
-
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; touch-action: manipulation; }
+        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); color: var(--text); }
+        .full-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); background: var(--bg); }
         .full-overlay.active { transform: translateY(0); }
         .hidden { display: none !important; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-
         .drawer { position: fixed; left: -100%; top: 0; bottom: 0; width: 85%; max-width: 320px; z-index: 200; transition: left 0.3s ease; }
         .drawer.open { left: 0; }
-
-        #battle-stopwatch { color: var(--text); }
-        #battle-chapter { color: var(--text); }
-        #battle-tag { background: var(--accent); color: white; }
-
         .mode-btn { transition: all 0.2s; border: 1px solid var(--border); font-size: 10px; color: var(--text); }
         .mode-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.1); color: var(--accent); }
-        
         @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .timer-warning { color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
-
         ::-webkit-scrollbar { display: none; }
-        .ca-logo { fill: var(--accent); }
     </style>
 </head>
 <body class="pb-10 select-none">
@@ -80,11 +46,9 @@
         <div class="flex items-center justify-between">
             <button onclick="toggleDrawer()" class="p-2 -ml-2"><i data-lucide="menu" class="w-5 h-5"></i></button>
             
-            <button onclick="showSubjects()" class="flex flex-col items-center group">
-                <svg class="ca-logo w-6 h-6 mb-0.5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2ZM12 15.5L8.5 17.5L12 7L15.5 17.5L12 15.5Z"/>
-                </svg>
-                <h1 class="text-[10px] font-black tracking-tighter uppercase italic">WAR ROOM</h1>
+            <button onclick="showSubjects()" class="flex flex-col items-center group active:scale-95 transition-transform">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/CA_India_Logo.png" alt="CA Logo" class="h-8 w-auto mb-1">
+                <h1 class="text-[9px] font-black tracking-widest uppercase italic">WAR ROOM</h1>
                 <div id="countdown" class="text-[7px] mono text-yellow-500 font-bold uppercase">LOADING...</div>
             </button>
 
@@ -98,31 +62,26 @@
     </nav>
 
     <div id="mock-setup" class="full-overlay glass px-6">
-        <div class="w-full max-w-md space-y-6">
-            <div class="text-center">
-                <h2 class="text-2xl font-black italic uppercase">Paper Selection</h2>
-                <p class="text-[10px] opacity-60 font-bold tracking-[0.2em] mt-1">15M READING + 3H/4H WRITING</p>
-            </div>
+        <div class="w-full max-w-md space-y-6 text-center">
+            <h2 class="text-2xl font-black italic uppercase">Paper Selection</h2>
+            <p class="text-[10px] opacity-60 font-bold tracking-[0.2em] mt-1">15M READING + 3H/4H WRITING</p>
             <div class="space-y-2 max-h-[60vh] overflow-y-auto" id="mock-papers-list"></div>
             <button onclick="closeMockSetup()" class="w-full py-4 opacity-50 font-black text-[10px] uppercase tracking-widest">Cancel</button>
         </div>
     </div>
 
     <div id="battle-mode" class="full-overlay px-4">
-        <div id="pomo-alert" class="hidden absolute top-20 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-xs animate-bounce shadow-2xl">TIME UP!</div>
+        <div id="pomo-alert" class="hidden absolute top-20 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-xs animate-bounce shadow-2xl">TIME EXPIRED!</div>
         <div class="text-center w-full space-y-6">
-            <div id="battle-tag" class="inline-block px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase"></div>
+            <div id="battle-tag" class="inline-block px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-600 text-white"></div>
             <h2 id="battle-chapter" class="text-2xl font-black italic px-4 leading-tight"></h2>
-            
             <div class="py-6">
                 <div id="battle-stopwatch" class="text-6xl sm:text-8xl mono font-black tracking-tighter">00:00:00</div>
-                <div id="pomo-subtext" class="text-blue-500 text-[10px] mt-4 font-bold uppercase tracking-widest"></div>
             </div>
-
             <div class="flex justify-center gap-6 pt-4">
-                <button id="btn-pause" onclick="togglePause()" class="w-14 h-14 rounded-full border border-yellow-500/50 flex items-center justify-center text-yellow-500"><i id="pause-icon" data-lucide="pause" class="w-6 h-6"></i></button>
-                <button onclick="stopBattle()" class="w-14 h-14 rounded-full border border-red-500/50 flex items-center justify-center text-red-500"><i data-lucide="square" class="w-6 h-6 fill-current"></i></button>
-                <button id="btn-done" onclick="markDoneBattle()" class="w-14 h-14 rounded-full border border-green-500/50 flex items-center justify-center text-green-500"><i data-lucide="check" class="w-6 h-6"></i></button>
+                <button id="btn-pause" onclick="togglePause()" class="w-16 h-16 rounded-full border border-yellow-500/50 flex items-center justify-center text-yellow-500"><i id="pause-icon" data-lucide="pause" class="w-7 h-7"></i></button>
+                <button onclick="stopBattle()" class="w-16 h-16 rounded-full border border-red-500/50 flex items-center justify-center text-red-500"><i data-lucide="square" class="w-7 h-7 fill-current"></i></button>
+                <button id="btn-done" onclick="markDoneBattle()" class="w-16 h-16 rounded-full border border-green-500/50 flex items-center justify-center text-green-500"><i data-lucide="check" class="w-7 h-7"></i></button>
             </div>
         </div>
     </div>
@@ -130,7 +89,7 @@
     <main class="max-w-4xl mx-auto px-4 mt-6">
         <div id="subject-grid-view" class="grid grid-cols-1 gap-4 pb-24"></div>
         <div id="chapter-list-view" class="hidden pb-24">
-            <button onclick="showSubjects()" class="mb-4 text-blue-500 font-bold text-[10px] tracking-widest flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> BACK TO SUBJECTS</button>
+            <button onclick="showSubjects()" class="mb-4 text-blue-500 font-bold text-[10px] tracking-widest flex items-center gap-1 uppercase"><i data-lucide="chevron-left" class="w-4 h-4"></i> Main Menu</button>
             <h2 id="current-subject-title" class="text-2xl font-black italic mb-6 uppercase tracking-tighter"></h2>
             <div id="chapters-container" class="space-y-3"></div>
         </div>
@@ -138,28 +97,26 @@
 
     <div id="library-drawer" class="drawer glass p-6 overflow-y-auto">
         <div class="flex justify-between items-center mb-6"><h2 class="font-black text-lg italic uppercase">Resources</h2><button onclick="toggleDrawer()"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-        <div id="link-list" class="space-y-2 mb-6"></div>
         <div class="space-y-2">
-            <input id="link-name" type="text" placeholder="Site Name" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
-            <input id="link-url" type="text" placeholder="URL" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
-            <button onclick="addCustomLink()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest">Add Link</button>
+            <button onclick="exportData()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest">Backup Data</button>
+            <button onclick="clearData()" class="w-full border border-red-500 text-red-500 py-3 rounded-lg text-[10px] uppercase font-bold">Clear All Progress</button>
         </div>
     </div>
 
     <script>
         const examDate = new Date("May 2, 2026 09:00:00").getTime();
         const syllabus = {
-            "Financial Reporting": { chapters: ["Ind AS 1, 8, 10, 34, 113", "Ind AS 2, 16, 23, 36, 37, 38, 40, 105, 116", "Ind AS 19, 33, 102", "Ind AS 12, 21", "Ind AS 115 (Revenue)", "Financial Instruments (32, 109, 107)", "Business Combinations (103)", "Consolidated FS", "Ind AS 27, 28, 110, 111, 112", "Analysis of FS", "Carbon Credits & Ethics"] },
-            "Adv Financial Mgmt": { chapters: ["Financial Policy", "Risk Mgmt", "Advanced Capital Budgeting", "Security Valuation", "Portfolio Mgmt", "Securitization & Mutual Funds", "Derivatives", "Forex Mgmt", "Interest Rate Risk", "Business Valuation", "Mergers & Acquisitions", "Startup Finance"] },
-            "Auditing & Ethics": { chapters: ["Quality Control (SQC 1)", "SA 200 Series", "Audit Planning (300s)", "Audit Evidence (500s)", "Audit Reporting (700s)", "Audit of Banks", "Audit of NBFCs", "Audit of PSUs", "Internal Audit", "Due Diligence", "SDG Assurance", "Professional Ethics"] },
-            "Direct Tax Laws": { chapters: ["PGBP", "Capital Gains", "Other Sources & ICDS", "Assessment of Entities", "Assessment of Companies (MAT)", "Trusts", "Tax Planning", "TDS/TCS & Advance Tax", "Assessment Procedures", "Appeals & Penalties", "Transfer Pricing", "NR Taxation", "DTAA", "Black Money Act"] },
-            "Indirect Tax Laws": { chapters: ["Supply & Charge", "Place of Supply", "Time & Value of Supply", "Input Tax Credit", "Registration & Invoicing", "Returns & Payment", "Refunds", "Assessment & Audit", "Appeals & Penalties", "Customs: Value & Classification", "Customs: Procedures", "FTP"] },
+            "Financial Reporting": { chapters: ["Ind AS 1, 8, 10, 34, 113", "Asset Based Ind AS (16, 23, 36, 37, 38, 40, 105, 116)", "Ind AS 19, 33, 102", "Ind AS 12, 21", "Ind AS 115 (Revenue)", "Financial Instruments (32, 109, 107)", "Business Combinations (103)", "Consolidated FS", "Accounting for Carbon Credits", "Professional Ethics"] },
+            "Adv Financial Mgmt": { chapters: ["Financial Policy", "Risk Mgmt", "Advanced Capital Budgeting", "Security Valuation", "Portfolio Mgmt", "Mutual Funds", "Derivatives", "Forex Mgmt", "Interest Rate Risk", "Business Valuation", "Mergers & Acquisitions", "Startup Finance"] },
+            "Auditing & Ethics": { chapters: ["Quality Control (SQC 1)", "SA 200 Series", "Audit Planning (300s)", "Audit Evidence (500s)", "Audit Reporting (700s)", "Audit of Banks", "Audit of NBFCs", "Audit of PSUs", "Internal Audit", "Due Diligence", "Sustainable Assurance", "Professional Ethics"] },
+            "Direct Tax Laws": { chapters: ["PGBP", "Capital Gains", "Other Sources & ICDS", "Assessment of Entities", "MAT / AMT", "Charitable Trusts", "Tax Planning", "TDS/TCS & Advance Tax", "Assessment Procedures", "Appeals & Penalties", "Transfer Pricing", "Non-Resident Taxation", "Black Money Act"] },
+            "Indirect Tax Laws": { chapters: ["Supply & Charge", "Place of Supply", "Time & Value of Supply", "Input Tax Credit", "Registration", "Returns & Payment", "Refunds", "Assessment & Audit", "Appeals & Penalties", "Customs: Value & Classification", "Customs: Import/Export", "FTP"] },
             "Integrated Biz Solutions": { chapters: ["Case Study 1", "Case Study 2", "Case Study 3", "Case Study 4", "Case Study 5", "Case Study 6", "Case Study 7", "Case Study 8"] }
         };
 
         let studyData = JSON.parse(localStorage.getItem('caWarRoomDataV16')) || {};
         let currentMode = 'normal'; 
-        let timerInterval, sessionSeconds = 0, isPaused = false, activeSub = "", activeChap = "";
+        let timerInterval, secondsRemaining = 0, sessionSeconds = 0, isPaused = false, activeSub = "", activeChap = "";
 
         function toggleDrawer() { document.getElementById('library-drawer').classList.toggle('open'); }
         function setGlobalMode(m) {
@@ -167,6 +124,7 @@
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${m}`).classList.add('active');
         }
+
         function openMockSetup() { 
             const list = document.getElementById('mock-papers-list');
             list.innerHTML = Object.keys(syllabus).map((sub, i) => `
@@ -178,16 +136,16 @@
 
         function startBattle(sub, chap) {
             activeSub = sub; activeChap = chap;
-            const battle = document.getElementById('battle-mode');
-            battle.classList.add('active');
+            document.getElementById('battle-mode').classList.add('active');
             document.getElementById('battle-tag').innerText = currentMode.toUpperCase() + " SESSION";
             document.getElementById('battle-chapter').innerText = chap;
             
+            isPaused = false;
             if(currentMode === 'pomo') {
-                sessionSeconds = 1500; // 25 Minutes
+                secondsRemaining = 1500; // 25 Minutes countdown
                 runCountdown(1500, () => { 
                     document.getElementById('pomo-alert').classList.remove('hidden');
-                    setTimeout(() => { document.getElementById('pomo-alert').classList.add('hidden'); stopBattle(); }, 5000);
+                    setTimeout(() => { document.getElementById('pomo-alert').classList.add('hidden'); stopBattle(); }, 3000);
                 });
             } else {
                 sessionSeconds = 0;
@@ -197,23 +155,23 @@
 
         function runForwardClock() {
             clearInterval(timerInterval);
-            let startTime = Date.now();
+            let start = Date.now();
             timerInterval = setInterval(() => {
                 if(!isPaused) {
-                    sessionSeconds = Math.floor((Date.now() - startTime) / 1000);
+                    sessionSeconds = Math.floor((Date.now() - start) / 1000);
                     updateDisplay(sessionSeconds);
                 }
             }, 1000);
         }
 
-        function runCountdown(seconds, callback) {
+        function runCountdown(sec, callback) {
             clearInterval(timerInterval);
-            let target = seconds;
+            secondsRemaining = sec;
             timerInterval = setInterval(() => {
                 if(!isPaused) {
-                    target--;
-                    updateDisplay(target);
-                    if(target <= 0) { clearInterval(timerInterval); callback(); }
+                    secondsRemaining--;
+                    updateDisplay(secondsRemaining);
+                    if(secondsRemaining <= 0) { clearInterval(timerInterval); callback(); }
                 }
             }, 1000);
         }
@@ -222,12 +180,12 @@
             activeSub = "MOCK EXAM"; activeChap = paperName;
             closeMockSetup();
             document.getElementById('battle-mode').classList.add('active');
-            document.getElementById('battle-tag').innerText = "PHASE 1: READING (15:00)";
+            document.getElementById('battle-tag').innerText = "READING PHASE (15:00)";
             document.getElementById('battle-chapter').innerText = paperName;
             runCountdown(900, () => {
-                document.getElementById('battle-tag').innerText = "PHASE 2: WRITING TIME";
+                document.getElementById('battle-tag').innerText = "WRITING PHASE";
                 let total = paperName.includes("Paper 6") ? 14400 : 10800;
-                runCountdown(total, () => { alert("TIME UP!"); stopBattle(); });
+                runCountdown(total, () => { stopBattle(); });
             });
         }
 
@@ -257,9 +215,8 @@
             if(activeSub === "MOCK EXAM") return;
             const k = `${activeSub}-${activeChap}`;
             if(!studyData[k]) studyData[k] = { r1: false, time: 0 };
-            // For Pomo, we add the full 25m if they finish
-            let addedTime = (currentMode === 'pomo') ? (1500 - sessionSeconds) : sessionSeconds;
-            studyData[k].time += (addedTime > 0 ? addedTime : 0);
+            let addedTime = (currentMode === 'pomo') ? (1500 - secondsRemaining) : sessionSeconds;
+            studyData[k].time += Math.max(0, addedTime);
             save();
         }
 
@@ -273,7 +230,7 @@
             document.getElementById('subject-grid-view').innerHTML = Object.keys(syllabus).map(sub => {
                 const comp = syllabus[sub].chapters.filter(c => studyData[`${sub}-${c}`]?.r1).length;
                 const per = Math.round((comp/syllabus[sub].chapters.length)*100);
-                return `<div class="p-5 rounded-2xl glass flex justify-between items-center" onclick="showChapters('${sub}')">
+                return `<div class="p-5 rounded-2xl glass flex justify-between items-center active:scale-95 transition-transform" onclick="showChapters('${sub}')">
                     <div class="space-y-1">
                         <h3 class="font-black text-sm uppercase tracking-tight">${sub}</h3>
                         <div class="text-[9px] font-black text-blue-500 uppercase">${per}% COMPLETE</div>
@@ -320,6 +277,11 @@
         }
 
         function save() { localStorage.setItem('caWarRoomDataV16', JSON.stringify(studyData)); }
+        function exportData() {
+            const blob = new Blob([JSON.stringify(studyData)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'WarRoom_Backup.json'; a.click();
+        }
+        function clearData() { if(confirm("Are you sure? This will delete all study progress!")) { localStorage.clear(); location.reload(); } }
         
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
