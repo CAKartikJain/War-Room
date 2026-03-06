@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CA Final | War Room V16.3</title>
+    <title>CA Final | War Room V16.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -36,6 +36,9 @@
         .mode-btn { transition: all 0.2s; border: 1px solid var(--border); font-size: 10px; color: var(--text); }
         .mode-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.1); color: var(--accent); }
         ::-webkit-scrollbar { display: none; }
+        
+        .pomo-preset-btn { border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 10px; font-weight: bold; text-align: center; }
+        .pomo-preset-btn:active { background: var(--accent); color: white; }
     </style>
 </head>
 <body class="pb-10 select-none">
@@ -54,7 +57,7 @@
         </div>
         <div class="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar">
             <button id="btn-normal" onclick="setGlobalMode('normal')" class="mode-btn active px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase tracking-wider">Standard</button>
-            <button id="btn-pomo" onclick="setGlobalMode('pomo')" class="mode-btn px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase tracking-wider">Pomodoro (25m)</button>
+            <button id="btn-pomo" onclick="setGlobalMode('pomo')" class="mode-btn px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase tracking-wider">Pomodoro</button>
             <button id="btn-mock" onclick="openMockSetup()" class="mode-btn px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase tracking-wider bg-red-900/10 text-red-500 border-red-900/30">Mock Test</button>
         </div>
     </nav>
@@ -64,14 +67,10 @@
             <h2 class="font-black text-lg italic uppercase">Library</h2>
             <button onclick="toggleDrawer()"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-        
-        <div id="link-list" class="space-y-2 mb-6">
-            </div>
-
+        <div id="link-list" class="space-y-2 mb-6"></div>
         <div class="space-y-2 pt-4 border-t border-slate-700">
-            <p class="text-[10px] font-bold opacity-50 uppercase tracking-widest mb-2">Add Resource</p>
-            <input id="link-name" type="text" placeholder="Site Name (e.g. ICAI BOS)" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
-            <input id="link-url" type="text" placeholder="URL (https://...)" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
+            <input id="link-name" type="text" placeholder="Site Name" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
+            <input id="link-url" type="text" placeholder="URL" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
             <button onclick="addCustomLink()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest">Add to Library</button>
             <div class="grid grid-cols-2 gap-2 mt-4">
                 <button onclick="exportData()" class="border border-slate-700 py-3 rounded-lg text-[9px] uppercase font-bold opacity-60">Export</button>
@@ -80,8 +79,36 @@
         </div>
     </div>
 
+    <div id="pomo-setup" class="full-overlay glass px-6">
+        <div class="w-full max-w-sm space-y-6">
+            <div class="text-center">
+                <h2 class="text-2xl font-black italic uppercase">Focus Settings</h2>
+                <p id="pomo-setup-title" class="text-[10px] text-blue-500 font-bold tracking-widest mt-1 uppercase"></p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase opacity-50">Study (Min)</label>
+                    <input id="pomo-study-time" type="number" value="25" class="w-full bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold outline-none focus:border-blue-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase opacity-50">Break (Min)</label>
+                    <input id="pomo-break-time" type="number" value="5" class="w-full bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="setPresets(25, 5)" class="pomo-preset-btn">25 + 5<br><span class="opacity-40 font-normal">Classic</span></button>
+                <button onclick="setPresets(50, 10)" class="pomo-preset-btn">50 + 10<br><span class="opacity-40 font-normal">Deep Work</span></button>
+            </div>
+
+            <button onclick="confirmPomo()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-900/20">Initialize Session</button>
+            <button onclick="closePomoSetup()" class="w-full py-2 opacity-50 font-bold text-[10px] uppercase tracking-widest">Cancel</button>
+        </div>
+    </div>
+
     <div id="battle-mode" class="full-overlay px-4">
-        <div id="pomo-alert" class="hidden absolute top-20 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-xs animate-bounce shadow-2xl uppercase">Focus Session Ended!</div>
+        <div id="phase-banner" class="hidden absolute top-20 bg-yellow-500 text-black px-8 py-2 rounded-full font-black text-xs animate-bounce shadow-2xl uppercase tracking-tighter">PHASE CHANGE!</div>
         <div class="text-center w-full space-y-6">
             <div id="battle-tag" class="inline-block px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-600 text-white"></div>
             <h2 id="battle-chapter" class="text-2xl font-black italic px-4 leading-tight"></h2>
@@ -130,22 +157,22 @@
         
         let currentMode = 'normal'; 
         let timerInterval, secondsRemaining = 0, sessionSeconds = 0, isPaused = false, activeSub = "", activeChap = "";
+        let pomoBreakSeconds = 0;
 
-        // UI Core
+        // --- UI Core ---
         function toggleDrawer() { document.getElementById('library-drawer').classList.toggle('open'); renderLibrary(); }
         function setGlobalMode(m) {
             currentMode = m;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${m}`).classList.add('active');
         }
-
         function showSubjects() { 
             document.getElementById('chapter-list-view').classList.add('hidden'); 
             document.getElementById('subject-grid-view').classList.remove('hidden'); 
             renderMenu(); 
         }
 
-        // Library Logic
+        // --- Library ---
         function renderLibrary() {
             const list = document.getElementById('link-list');
             list.innerHTML = libraryLinks.map((link, index) => `
@@ -153,48 +180,65 @@
                     <a href="${link.url}" target="_blank" class="flex-grow p-3 glass rounded-lg text-xs font-bold flex justify-between items-center">
                         ${link.name} <i data-lucide="external-link" class="w-3 h-3 opacity-50"></i>
                     </a>
-                    <button onclick="deleteLink(${index})" class="p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    <button onclick="deleteLink(${index})" class="p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
         }
-
         function addCustomLink() {
             const name = document.getElementById('link-name').value;
             const url = document.getElementById('link-url').value;
             if (name && url) {
                 libraryLinks.push({ name, url: url.startsWith('http') ? url : 'https://' + url });
                 localStorage.setItem('caWarRoomLinksV16', JSON.stringify(libraryLinks));
-                document.getElementById('link-name').value = '';
-                document.getElementById('link-url').value = '';
-                renderLibrary();
+                document.getElementById('link-name').value = ''; document.getElementById('link-url').value = ''; renderLibrary();
             }
         }
+        function deleteLink(index) { libraryLinks.splice(index, 1); localStorage.setItem('caWarRoomLinksV16', JSON.stringify(libraryLinks)); renderLibrary(); }
 
-        function deleteLink(index) {
-            libraryLinks.splice(index, 1);
-            localStorage.setItem('caWarRoomLinksV16', JSON.stringify(libraryLinks));
-            renderLibrary();
+        // --- Pomo Setup ---
+        function closePomoSetup() { document.getElementById('pomo-setup').classList.remove('active'); }
+        function setPresets(s, b) { document.getElementById('pomo-study-time').value = s; document.getElementById('pomo-break-time').value = b; }
+        function confirmPomo() {
+            const s = parseInt(document.getElementById('pomo-study-time').value) * 60;
+            const b = parseInt(document.getElementById('pomo-break-time').value) * 60;
+            pomoBreakSeconds = b;
+            closePomoSetup();
+            actuallyStartBattle(s);
         }
 
-        // Battle Engine
+        // --- Battle Engine ---
         function startBattle(sub, chap) {
             activeSub = sub; activeChap = chap;
-            document.getElementById('battle-mode').classList.add('active');
-            document.getElementById('battle-tag').innerText = currentMode.toUpperCase() + " SESSION";
-            document.getElementById('battle-chapter').innerText = chap;
-            isPaused = false;
             if(currentMode === 'pomo') {
-                runCountdown(1500, () => { 
-                    document.getElementById('pomo-alert').classList.remove('hidden');
-                    setTimeout(() => { document.getElementById('pomo-alert').classList.add('hidden'); stopBattle(); }, 3000);
-                });
+                document.getElementById('pomo-setup-title').innerText = chap;
+                document.getElementById('pomo-setup').classList.add('active');
             } else {
-                sessionSeconds = 0;
-                runForwardClock();
+                actuallyStartBattle();
             }
+        }
+
+        function actuallyStartBattle(countdownStart) {
+            document.getElementById('battle-mode').classList.add('active');
+            document.getElementById('battle-chapter').innerText = activeChap;
+            document.getElementById('battle-tag').innerText = currentMode.toUpperCase() + " SESSION";
+            isPaused = false;
+
+            if(currentMode === 'pomo') {
+                runCountdown(countdownStart, () => startBreakPhase());
+            } else {
+                sessionSeconds = 0; runForwardClock();
+            }
+        }
+
+        function startBreakPhase() {
+            document.getElementById('phase-banner').classList.remove('hidden');
+            document.getElementById('battle-tag').innerText = "BREAK PHASE";
+            document.getElementById('battle-tag').classList.replace('bg-blue-600', 'bg-green-600');
+            runCountdown(pomoBreakSeconds, () => {
+                document.getElementById('phase-banner').innerText = "BREAK DONE!";
+                setTimeout(() => { stopBattle(); }, 2000);
+            });
         }
 
         function runForwardClock() {
@@ -236,8 +280,7 @@
             commit(); 
             if(activeSub !== "MOCK EXAM") {
                 const k = `${activeSub}-${activeChap}`;
-                if(!studyData[k]) studyData[k] = { r1: true, time: 0 };
-                else studyData[k].r1 = true;
+                if(!studyData[k]) studyData[k] = { r1: true, time: 0 }; else studyData[k].r1 = true;
             }
             exit(); 
         }
@@ -246,18 +289,21 @@
             if(activeSub === "MOCK EXAM") return;
             const k = `${activeSub}-${activeChap}`;
             if(!studyData[k]) studyData[k] = { r1: false, time: 0 };
-            let addedTime = (currentMode === 'pomo') ? (1500 - secondsRemaining) : sessionSeconds;
-            studyData[k].time += Math.max(0, addedTime);
+            // Calc time: If pomo, we assume they studied the studyMin unless they stopped early
+            let added = (currentMode === 'pomo') ? (parseInt(document.getElementById('pomo-study-time').value)*60) : sessionSeconds;
+            studyData[k].time += Math.max(0, added);
             save();
         }
 
         function exit() {
             clearInterval(timerInterval);
             document.getElementById('battle-mode').classList.remove('active');
+            document.getElementById('phase-banner').classList.add('hidden');
+            document.getElementById('battle-tag').className = "inline-block px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-600 text-white";
             setTimeout(() => { renderMenu(); if(activeSub !== "MOCK EXAM") renderChapters(activeSub); }, 500);
         }
 
-        // Subject Logic
+        // --- Main Views ---
         function renderMenu() {
             document.getElementById('subject-grid-view').innerHTML = Object.keys(syllabus).map(sub => {
                 const comp = syllabus[sub].chapters.filter(c => studyData[`${sub}-${c}`]?.r1).length;
@@ -272,15 +318,11 @@
             }).join('');
             lucide.createIcons();
         }
-
         function showChapters(sub) {
-            activeSub = sub; 
-            document.getElementById('subject-grid-view').classList.add('hidden');
+            activeSub = sub; document.getElementById('subject-grid-view').classList.add('hidden');
             document.getElementById('chapter-list-view').classList.remove('hidden');
-            document.getElementById('current-subject-title').innerText = sub;
-            renderChapters(sub);
+            document.getElementById('current-subject-title').innerText = sub; renderChapters(sub);
         }
-
         function renderChapters(sub) {
             document.getElementById('chapters-container').innerHTML = syllabus[sub].chapters.map(chap => {
                 const d = studyData[`${sub}-${chap}`] || { r1: false, time: 0 };
@@ -295,14 +337,9 @@
             }).join('');
             lucide.createIcons();
         }
+        function toggleF(k) { if(!studyData[k]) studyData[k]={r1:false,time:0}; studyData[k].r1 = !studyData[k].r1; save(); renderMenu(); }
 
-        function toggleF(k) { 
-            if(!studyData[k]) studyData[k]={r1:false,time:0}; 
-            studyData[k].r1 = !studyData[k].r1; 
-            save(); renderMenu(); 
-        }
-
-        // Mock Logic
+        // --- Mocks ---
         function openMockSetup() { 
             const list = document.getElementById('mock-papers-list');
             list.innerHTML = Object.keys(syllabus).map((sub, i) => `
@@ -312,31 +349,27 @@
         }
         function closeMockSetup() { document.getElementById('mock-setup').classList.remove('active'); }
         function startMock(paperName) {
-            activeSub = "MOCK EXAM"; activeChap = paperName;
-            closeMockSetup();
+            activeSub = "MOCK EXAM"; activeChap = paperName; closeMockSetup();
             document.getElementById('battle-mode').classList.add('active');
             document.getElementById('battle-tag').innerText = "READING PHASE (15:00)";
-            document.getElementById('battle-chapter').innerText = paperName;
             runCountdown(900, () => {
                 document.getElementById('battle-tag').innerText = "WRITING PHASE";
-                let total = paperName.includes("Paper 6") ? 14400 : 10800;
-                runCountdown(total, () => { stopBattle(); });
+                let total = paperName.includes("Paper 6") ? 14400 : 10800; runCountdown(total, () => { stopBattle(); });
             });
         }
 
-        // Settings
+        // --- Settings ---
         function save() { localStorage.setItem('caWarRoomDataV16', JSON.stringify(studyData)); }
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             const isLight = document.body.classList.contains('light-mode');
-            document.getElementById('theme-icon').setAttribute('data-lucide', isLight ? 'sun' : 'moon');
-            lucide.createIcons();
+            document.getElementById('theme-icon').setAttribute('data-lucide', isLight ? 'sun' : 'moon'); lucide.createIcons();
         }
         function exportData() {
-            const blob = new Blob([JSON.stringify({study: studyData, links: libraryLinks})], {type: 'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'WarRoom_Backup.json'; a.click();
+            const b = new Blob([JSON.stringify({study: studyData, links: libraryLinks})], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'WarRoom_Backup.json'; a.click();
         }
-        function clearData() { if(confirm("Clear all study progress?")) { localStorage.clear(); location.reload(); } }
+        function clearData() { if(confirm("Clear progress?")) { localStorage.clear(); location.reload(); } }
 
         setInterval(() => {
             const diff = examDate - Date.now();
