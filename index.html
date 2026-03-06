@@ -3,44 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CA Final | War Room V16</title>
+    <title>CA Final | War Room V16.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
-        :root { --bg: #020617; --card: rgba(15, 23, 42, 0.9); --text: #e2e8f0; --accent: #3b82f6; }
-        .light-mode { --bg: #f1f5f9; --card: rgba(255, 255, 255, 0.95); --text: #0f172a; --accent: #2563eb; }
         
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: all 0.3s ease; touch-action: manipulation; }
-        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid rgba(51, 65, 85, 0.3); }
+        :root { 
+            --bg: #020617; 
+            --card: rgba(15, 23, 42, 0.9); 
+            --text: #e2e8f0; 
+            --accent: #3b82f6; 
+            --border: rgba(51, 65, 85, 0.5);
+        }
+        
+        .light-mode { 
+            --bg: #f8fafc; 
+            --card: rgba(255, 255, 255, 0.9); 
+            --text: #0f172a; 
+            --accent: #2563eb; 
+            --border: rgba(148, 163, 184, 0.3);
+        }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            transition: background 0.3s, color 0.3s; 
+            touch-action: manipulation; 
+        }
+
+        .glass { 
+            background: var(--card); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid var(--border); 
+            color: var(--text);
+        }
+
+        .full-overlay { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 100; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            transform: translateY(100%); 
+            background: var(--bg);
+        }
+
+        .full-overlay.active { transform: translateY(0); }
         .hidden { display: none !important; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Overlays optimized for Mobile Viewport */
-        .full-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); }
-        .full-overlay.active { transform: translateY(0); }
-        
-        #battle-mode.study-active { background: #020617; }
-        #battle-mode.mock-active { background: #000; border: 4px solid #450a0a; }
 
-        /* Drawer - Full height on mobile */
-        .drawer { position: fixed; left: -100%; top: 0; bottom: 0; width: 85%; max-width: 320px; z-index: 200; transition: left 0.3s ease; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
+        /* Drawer Fixes */
+        .drawer { position: fixed; left: -100%; top: 0; bottom: 0; width: 85%; max-width: 320px; z-index: 200; transition: left 0.3s ease; }
         .drawer.open { left: 0; }
-        
+
+        /* Battle Mode Text visibility */
+        #battle-stopwatch { color: var(--text); }
+        #battle-chapter { color: var(--text); }
+        #battle-tag { background: var(--accent); color: white; }
+
         /* Interactive Elements */
-        .mode-btn { transition: all 0.2s; border: 1px solid rgba(51, 65, 85, 0.5); font-size: 10px; }
-        .mode-btn.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .mode-btn { transition: all 0.2s; border: 1px solid var(--border); font-size: 10px; color: var(--text); }
+        .mode-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.1); color: var(--accent); }
         
         @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .timer-warning { color: #ef4444; animation: pulse-red 1.5s infinite; }
+        .timer-warning { color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
 
-        /* Scrollbar Hide for clean mobile look */
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="pb-10 select-none">
 
-    <nav class="sticky top-0 z-50 glass border-b border-slate-800/50 p-3 px-4">
+    <nav class="sticky top-0 z-50 glass border-b p-3 px-4">
         <div class="flex items-center justify-between">
             <button onclick="toggleDrawer()" class="p-2 -ml-2"><i data-lucide="menu" class="w-5 h-5"></i></button>
             <div class="text-center">
@@ -56,33 +94,33 @@
         </div>
     </nav>
 
-    <div id="mock-setup" class="full-overlay glass backdrop-blur-3xl px-6">
+    <div id="mock-setup" class="full-overlay glass px-6">
         <div class="w-full max-w-md space-y-6">
             <div class="text-center">
                 <h2 class="text-2xl font-black italic uppercase">Paper Selection</h2>
-                <p class="text-[10px] text-slate-500 font-bold tracking-[0.2em] mt-1">15M READING + 3H/4H WRITING</p>
+                <p class="text-[10px] opacity-60 font-bold tracking-[0.2em] mt-1">15M READING + 3H/4H WRITING</p>
             </div>
             <div class="space-y-2 max-h-[60vh] overflow-y-auto">
-                <button onclick="startMock('Paper 1: FR')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm bg-slate-900/40">Paper 1: Financial Reporting</button>
-                <button onclick="startMock('Paper 2: AFM')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm bg-slate-900/40">Paper 2: Adv Financial Mgmt</button>
-                <button onclick="startMock('Paper 3: Audit')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm bg-slate-900/40">Paper 3: Auditing & Ethics</button>
-                <button onclick="startMock('Paper 4: DT')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm bg-slate-900/40">Paper 4: Direct Tax Laws</button>
-                <button onclick="startMock('Paper 5: IDT')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm bg-slate-900/40">Paper 5: Indirect Tax Laws</button>
-                <button onclick="startMock('Paper 6: IBS')" class="w-full p-4 rounded-xl border border-red-900/50 text-left font-bold text-sm bg-red-900/10 text-red-100">Paper 6: IBS (4 Hours)</button>
+                <button onclick="startMock('Paper 1: FR')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm glass">Paper 1: Financial Reporting</button>
+                <button onclick="startMock('Paper 2: AFM')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm glass">Paper 2: Adv Financial Mgmt</button>
+                <button onclick="startMock('Paper 3: Audit')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm glass">Paper 3: Auditing & Ethics</button>
+                <button onclick="startMock('Paper 4: DT')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm glass">Paper 4: Direct Tax Laws</button>
+                <button onclick="startMock('Paper 5: IDT')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm glass">Paper 5: Indirect Tax Laws</button>
+                <button onclick="startMock('Paper 6: IBS')" class="w-full p-4 rounded-xl border border-red-900/50 text-left font-bold text-sm bg-red-900/10">Paper 6: IBS (4 Hours)</button>
             </div>
-            <button onclick="closeMockSetup()" class="w-full py-4 text-slate-500 font-black text-[10px] uppercase tracking-widest">Cancel</button>
+            <button onclick="closeMockSetup()" class="w-full py-4 opacity-50 font-black text-[10px] uppercase tracking-widest">Cancel</button>
         </div>
     </div>
 
     <div id="battle-mode" class="full-overlay px-4">
         <div id="pomo-alert" class="hidden absolute top-20 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-xs animate-bounce shadow-2xl">BREAK TIME!</div>
         <div class="text-center w-full space-y-6">
-            <div id="battle-tag" class="inline-block px-3 py-1 bg-white/10 rounded-full text-[9px] font-black tracking-widest uppercase"></div>
+            <div id="battle-tag" class="inline-block px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase"></div>
             <h2 id="battle-chapter" class="text-2xl font-black italic px-4 leading-tight"></h2>
             
             <div class="py-6">
                 <div id="battle-stopwatch" class="text-6xl sm:text-8xl mono font-black tracking-tighter">00:00:00</div>
-                <div id="pomo-subtext" class="text-blue-400 text-[10px] mt-4 font-bold uppercase tracking-widest"></div>
+                <div id="pomo-subtext" class="text-blue-500 text-[10px] mt-4 font-bold uppercase tracking-widest"></div>
             </div>
 
             <div class="flex justify-center gap-6 pt-4">
@@ -97,15 +135,15 @@
         <div class="flex justify-between items-center mb-6"><h2 class="font-black text-lg italic uppercase">Resources</h2><button onclick="toggleDrawer()"><i data-lucide="x" class="w-5 h-5"></i></button></div>
         <div id="link-list" class="space-y-2 mb-6"></div>
         <div class="space-y-2">
-            <input id="link-name" type="text" placeholder="Site Name" class="w-full bg-black/30 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
-            <input id="link-url" type="text" placeholder="URL" class="w-full bg-black/30 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
-            <button onclick="addCustomLink()" class="w-full bg-blue-600 py-3 rounded-lg font-bold text-xs uppercase tracking-widest">Add Link</button>
-            <button onclick="exportData()" class="w-full border border-slate-700 py-3 rounded-lg text-[10px] uppercase font-bold text-slate-400">Export Backup</button>
+            <input id="link-name" type="text" placeholder="Site Name" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
+            <input id="link-url" type="text" placeholder="URL" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs outline-none focus:border-blue-500">
+            <button onclick="addCustomLink()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest">Add Link</button>
+            <button onclick="exportData()" class="w-full border border-slate-700 py-3 rounded-lg text-[10px] uppercase font-bold opacity-60">Export Backup</button>
         </div>
     </div>
 
     <main class="max-w-4xl mx-auto px-4 mt-6">
-        <div id="subject-grid-view" class="grid grid-cols-1 gap-4 pb-24" id="subject-menu"></div>
+        <div id="subject-grid-view" class="grid grid-cols-1 gap-4 pb-24"></div>
         
         <div id="chapter-list-view" class="hidden pb-24">
             <button onclick="showSubjects()" class="mb-4 text-blue-500 font-bold text-[10px] tracking-widest flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> BACK TO SUBJECTS</button>
@@ -115,136 +153,34 @@
     </main>
 
     <script>
-        // Core syllabus remains unchanged
         const examDate = new Date("May 2, 2026 09:00:00").getTime();
         const syllabus = {
             "Financial Reporting": { 
                 icon: "landmark", 
-                chapters: [
-                    "Intro & Conceptual Framework", 
-                    "Ind AS 1, 34, 8, 10, 113", 
-                    "Ind AS 2, 16, 116, 23, 36, 38, 40, 105, 37", 
-                    "Ind AS 115 (Revenue)", 
-                    "Ind AS 19, 102", 
-                    "Ind AS 12, 21", 
-                    "Ind AS 24, 33, 108", 
-                    "Business Combinations (Ind AS 103)", 
-                    "Consolidated FS (Ind AS 110, 111, 112, 28, 27)", 
-                    "Financial Instruments (Ind AS 32, 109, 107)", 
-                    "Accounting for Carbon Credits", 
-                    "Integrated Reporting", 
-                    "CSR Reporting", 
-                    "Professional Ethics in FR"
-                ] 
+                chapters: ["Ind AS 1, 8, 10, 34, 113", "Ind AS 2, 16, 23, 36, 37, 38, 40, 105, 116", "Ind AS 19, 33, 102", "Ind AS 12, 21", "Ind AS 115 (Revenue)", "Financial Instruments (Ind AS 32, 109, 107)", "Business Combinations (Ind AS 103)", "Consolidated Financial Statements", "Ind AS 27, 28, 110, 111, 112", "Analysis of FS", "Carbon Credits & Integrated Reporting", "CSR & Professional Ethics"] 
             },
             "Adv Financial Mgmt": { 
                 icon: "trending-up", 
-                chapters: [
-                    "Financial Policy & Corp Strategy", 
-                    "Risk Management", 
-                    "Advanced Capital Budgeting Decisions", 
-                    "Security Analysis", 
-                    "Security Valuation", 
-                    "Portfolio Management", 
-                    "Securitization", 
-                    "Mutual Funds", 
-                    "Derivatives Analysis & Valuation", 
-                    "Foreign Exchange Management", 
-                    "International Financial Management", 
-                    "Interest Rate Risk Management", 
-                    "Business Valuation", 
-                    "Mergers, Acquisitions & Restructuring", 
-                    "Startup Finance"
-                ] 
+                chapters: ["Financial Policy & Strategy", "Risk Management", "Advanced Capital Budgeting", "Security Valuation", "Portfolio Management", "Securitization & Mutual Funds", "Derivatives Analysis", "Foreign Exchange Mgmt", "Interest Rate Risk Mgmt", "Business Valuation", "Mergers & Acquisitions", "Startup Finance"] 
             },
             "Auditing & Ethics": { 
                 icon: "scale", 
-                chapters: [
-                    "Quality Control (SQC 1, SA 220)", 
-                    "General Principles (SA 200, 210, 230, 240, 250, 260, 299)", 
-                    "Audit Planning & Risk (SA 300, 315, 320, 330)", 
-                    "Audit Evidence (SA 500-580)", 
-                    "Using Work of Others (SA 600, 610, 620)", 
-                    "Audit Conclusions & Reporting (SA 700-720)", 
-                    "Specialized Areas (SA 800, 805, 810)", 
-                    "Related Services (SRE, SAE, SRS)", 
-                    "Audit of Banks", 
-                    "Audit of NBFCs", 
-                    "Audit of PSUs", 
-                    "Internal Audit", 
-                    "Due Diligence, Investigation & Forensic Audit", 
-                    "Sustainable Development Goals (SDG) Assurance", 
-                    "Professional Ethics & Liabilities"
-                ] 
+                chapters: ["Quality Control (SQC 1)", "SA 200 Series", "Audit Planning (SA 300 Series)", "Audit Evidence (SA 500 Series)", "Audit Reporting (SA 700 Series)", "Audit of Banks", "Audit of NBFCs", "Audit of PSUs", "Internal Audit", "Due Diligence & Investigation", "SDG Assurance", "Professional Ethics"] 
             },
             "Direct Tax Laws": { 
                 icon: "pie-chart", 
-                chapters: [
-                    "Basic Concepts & Tax Rates", 
-                    "Residence & Scope of Total Income", 
-                    "Incomes which do not form part of Total Income", 
-                    "Profits and Gains of Business or Profession (PGBP)", 
-                    "Capital Gains", 
-                    "Income from Other Sources", 
-                    "Income Computation & Disclosure Standards (ICDS)", 
-                    "Clubbing & Set-off of Losses", 
-                    "Deductions & Alternate Minimum Tax (AMT)", 
-                    "Assessment of Various Entities (Firms/AOP/BOI)", 
-                    "Assessment of Companies & MAT", 
-                    "Charitable/Religious Trusts & Institutions", 
-                    "Tax Planning & Avoidance", 
-                    "TDS, TCS & Advance Tax", 
-                    "Assessment Procedures & Returns", 
-                    "Appeals, Revision & Dispute Resolution", 
-                    "Penalties & Offences", 
-                    "Transfer Pricing", 
-                    "Non-Resident Taxation", 
-                    "Double Taxation Relief (DTAA)", 
-                    "Advance Rulings", 
-                    "Black Money Act"
-                ] 
+                chapters: ["PGBP", "Capital Gains", "Other Sources & ICDS", "Assessment of Entities", "Assessment of Companies (MAT)", "Trusts", "Tax Planning", "TDS/TCS & Advance Tax", "Assessment Procedures", "Appeals & Penalties", "Transfer Pricing", "Non-Resident Taxation", "DTAA", "Black Money Act"] 
             },
             "Indirect Tax Laws": { 
                 icon: "shopping-cart", 
-                chapters: [
-                    "GST: Supply under GST", 
-                    "GST: Charge of Tax", 
-                    "GST: Place of Supply", 
-                    "GST: Time and Value of Supply", 
-                    "GST: Input Tax Credit (ITC)", 
-                    "GST: Registration", 
-                    "GST: Tax Invoice, Credit & Debit Notes", 
-                    "GST: Accounts & Records; E-way Bills", 
-                    "GST: Payment of Tax", 
-                    "GST: Returns", 
-                    "GST: Refunds", 
-                    "GST: Assessment & Audit", 
-                    "GST: Inspection, Search, Seizure & Arrest", 
-                    "GST: Demands & Recovery", 
-                    "GST: Appeals & Revision", 
-                    "GST: Offences & Penalties", 
-                    "GST: Ethical Aspects", 
-                    "Customs: Levy & Exemptions", 
-                    "Customs: Classification & Valuation", 
-                    "Customs: Import, Export & Transit Procedures", 
-                    "Customs: Warehousing & Duty Drawback", 
-                    "Foreign Trade Policy (FTP)"
-                ] 
+                chapters: ["Supply & Charge of GST", "Place of Supply", "Time & Value of Supply", "Input Tax Credit (ITC)", "Registration & Invoicing", "Returns & Payment", "Refunds", "Assessment & Audit", "Appeals & Penalties", "Customs: Classification & Value", "Customs: Import/Export Procedure", "Foreign Trade Policy"] 
             },
             "Integrated Biz Solutions": { 
                 icon: "layers", 
-                chapters: [
-                    "IBS Matrix: Corporate & Economic Laws (SPOM Set A)", 
-                    "IBS Matrix: Strategic Cost & Performance Mgmt (SPOM Set B)", 
-                    "IBS Matrix: Financial Reporting Integration", 
-                    "IBS Matrix: AFM Integration", 
-                    "IBS Matrix: Auditing Integration", 
-                    "IBS Matrix: Direct Tax Integration", 
-                    "IBS Matrix: Indirect Tax Integration", 
-                    "Case Study Practice Sets"
-                ] 
+                chapters: ["Case Study 1", "Case Study 2", "Case Study 3", "Case Study 4", "Case Study 5", "Case Study 6", "Case Study 7", "Case Study 8"] 
             }
         };
+
         let studyData = JSON.parse(localStorage.getItem('caWarRoomDataV16')) || {};
         let libraryLinks = JSON.parse(localStorage.getItem('caWarRoomLinksV16')) || [{ name: "ICAI BOS", url: "https://www.icai.org" }];
         
@@ -261,11 +197,10 @@
         function openMockSetup() { document.getElementById('mock-setup').classList.add('active'); }
         function closeMockSetup() { document.getElementById('mock-setup').classList.remove('active'); }
 
-        // Start Study
         function startBattle(sub, chap) {
             activeSub = sub; activeChap = chap;
             const battle = document.getElementById('battle-mode');
-            battle.className = 'full-overlay active study-active';
+            battle.classList.add('active');
             document.getElementById('battle-tag').innerText = currentMode.toUpperCase() + " SESSION";
             document.getElementById('battle-chapter').innerText = chap;
             document.getElementById('btn-pause').style.display = 'flex';
@@ -285,7 +220,6 @@
             }, 1000);
         }
 
-        // Mock Logic
         function startMock(paperName) {
             activeSub = "MOCK EXAM"; activeChap = paperName;
             closeMockSetup();
@@ -294,7 +228,7 @@
 
         function enterReadingPhase(paperName) {
             const battle = document.getElementById('battle-mode');
-            battle.className = 'full-overlay active study-active';
+            battle.classList.add('active');
             document.getElementById('battle-tag').innerText = "PHASE 1: READING (15:00)";
             document.getElementById('battle-chapter').innerText = paperName;
             document.getElementById('btn-pause').style.display = 'none';
@@ -303,8 +237,6 @@
         }
 
         function enterWritingPhase(paperName) {
-            const battle = document.getElementById('battle-mode');
-            battle.className = 'full-overlay active mock-active';
             document.getElementById('battle-tag').innerText = "PHASE 2: WRITING TIME";
             let total = paperName.includes("Paper 6") ? 14400 : 10800;
             runCountdown(total, () => { alert("TIME UP!"); stopBattle(); });
@@ -346,6 +278,7 @@
         function exit() {
             clearInterval(timerInterval);
             document.getElementById('battle-mode').classList.remove('active');
+            document.getElementById('battle-stopwatch').classList.remove('timer-warning');
             setTimeout(() => { renderMenu(); if(activeSub !== "MOCK EXAM") renderChapters(activeSub); }, 500);
         }
 
@@ -375,7 +308,7 @@
             document.getElementById('chapters-container').innerHTML = syllabus[sub].chapters.map(chap => {
                 const d = studyData[`${sub}-${chap}`] || { r1: false, time: 0 };
                 return `<div class="glass p-4 rounded-xl flex items-center gap-4">
-                    <input type="checkbox" ${d.r1 ? 'checked' : ''} onchange="toggleF('${sub}-${chap}')" class="w-6 h-6 rounded border-slate-700 bg-slate-800">
+                    <input type="checkbox" ${d.r1 ? 'checked' : ''} onchange="toggleF('${sub}-${chap}')" class="w-6 h-6 rounded border-slate-700 bg-black/10">
                     <div class="flex-grow" onclick="startBattle('${sub}', '${chap}')">
                         <h4 class="text-xs font-bold leading-tight">${chap}</h4>
                         <p class="text-[9px] font-black text-blue-500 mt-1">${(d.time/3600).toFixed(2)} HOURS</p>
@@ -386,17 +319,23 @@
             lucide.createIcons();
         }
 
-        function toggleF(k) { if(!studyData[k]) studyData[k]={r1:false,time:0}; studyData[k].r1 = !studyData[k].r1; save(); }
+        function toggleF(k) { if(!studyData[k]) studyData[k]={r1:false,time:0}; studyData[k].r1 = !studyData[k].r1; save(); renderMenu(); }
         function showSubjects() { document.getElementById('chapter-list-view').classList.add('hidden'); document.getElementById('subject-grid-view').classList.remove('hidden'); renderMenu(); }
         function save() { localStorage.setItem('caWarRoomDataV16', JSON.stringify(studyData)); }
-        function exportData() {
-            const blob = new Blob([JSON.stringify(studyData)], {type: 'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'WarRoom_V16.json'; a.click();
-        }
+        
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             const isLight = document.body.classList.contains('light-mode');
             document.getElementById('theme-icon').setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+
+        function renderLibrary() {
+            document.getElementById('link-list').innerHTML = libraryLinks.map(l => `
+                <a href="${l.url}" target="_blank" class="block p-3 glass rounded-lg text-xs font-bold flex justify-between">
+                    ${l.name} <i data-lucide="external-link" class="w-3 h-3"></i>
+                </a>
+            `).join('');
             lucide.createIcons();
         }
 
