@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CA Final | War Room V17.0</title>
+    <title>CA Final | War Room V17.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,16 +13,18 @@
         :root { --bg: #020617; --card: rgba(15, 23, 42, 0.9); --text: #e2e8f0; --accent: #3b82f6; --border: rgba(51, 65, 85, 0.5); }
         .light-mode { --bg: #f8fafc; --card: rgba(255, 255, 255, 0.9); --text: #0f172a; --accent: #2563eb; --border: rgba(148, 163, 184, 0.3); }
         
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: background 0.3s; touch-action: manipulation; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: background 0.3s; touch-action: manipulation; }
         .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); }
         .full-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: var(--bg); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); }
         .full-overlay.active { transform: translateY(0); }
         .hidden { display: none !important; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        .drawer { position: fixed; left: -100%; top: 0; bottom: 0; width: 85%; max-width: 320px; z-index: 200; transition: left 0.3s ease; }
+        .drawer.open { left: 0; }
         .mode-btn { transition: all 0.2s; border: 1px solid var(--border); font-size: 10px; color: var(--text); }
         .mode-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.1); color: var(--accent); }
         
-        /* Calendar Heatmap Style */
+        /* Calendar Heatmap */
         .day-cell { aspect-ratio: 1; border-radius: 4px; border: 1px solid var(--border); }
         .level-0 { background: rgba(255,255,255,0.05); }
         .level-1 { background: #1e3a8a; }
@@ -34,70 +36,77 @@
 
     <nav class="sticky top-0 z-50 glass border-b p-3 px-4">
         <div class="flex items-center justify-between">
-            <button onclick="toggleView('stats')" class="p-2"><i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-500"></i></button>
+            <button onclick="toggleDrawer()" class="p-2"><i data-lucide="menu" class="w-5 h-5"></i></button>
             
-            <button onclick="showSubjects()" class="flex flex-col items-center">
+            <button onclick="showSubjects()" class="flex flex-col items-center group active:scale-95 transition-transform">
                 <img src="CA India Logo.png" alt="CA Logo" class="h-8 w-auto mb-1" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e8/CA_India_Logo.png'">
                 <h1 class="text-[8px] font-black tracking-widest uppercase italic">WAR ROOM</h1>
+                <div id="countdown" class="text-[7px] mono text-yellow-500 font-bold uppercase">LOADING...</div>
             </button>
 
-            <button onclick="toggleTheme()" class="p-2"><i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i></button>
-        </div>
-    </nav>
-
-    <div id="stats-view" class="full-overlay active overflow-y-auto p-4">
-        <div class="max-w-4xl mx-auto space-y-6 pt-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-black italic uppercase">Analytics</h2>
-                <button onclick="toggleView('main')" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-
-            <div class="glass p-4 rounded-2xl">
-                <h3 class="text-[10px] font-black uppercase opacity-50 mb-4 tracking-widest">Time Distribution</h3>
-                <canvas id="subjectChart" height="200"></canvas>
-            </div>
-
-            <div class="glass p-4 rounded-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-[10px] font-black uppercase opacity-50 tracking-widest">Study Streak</h3>
-                    <span id="streak-count" class="text-xs font-bold text-orange-500">0 DAY STREAK</span>
-                </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
-                    </div>
-            </div>
-
-            <div class="space-y-2">
-                <h3 class="text-[10px] font-black uppercase opacity-50 tracking-widest">Recent Activity</h3>
-                <div id="activity-log" class="space-y-2">
-                    </div>
+            <div class="flex gap-2">
+                <button onclick="toggleView('stats')" class="p-2"><i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-500"></i></button>
+                <button onclick="toggleTheme()" class="p-2"><i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i></button>
             </div>
         </div>
-    </div>
-
-    <main id="main-view" class="max-w-4xl mx-auto px-4 mt-6">
-        <div class="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
+        <div class="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar">
             <button id="btn-normal" onclick="setGlobalMode('normal')" class="mode-btn active px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase">Standard</button>
             <button id="btn-pomo" onclick="setGlobalMode('pomo')" class="mode-btn px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase">Pomodoro</button>
             <button id="btn-mock" onclick="openMockSetup()" class="mode-btn px-4 py-2 rounded-lg flex-shrink-0 font-bold uppercase border-red-900/50 text-red-500">Mock Test</button>
         </div>
+    </nav>
 
+    <div id="library-drawer" class="drawer glass p-6 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-black text-lg italic uppercase">Library</h2>
+            <button onclick="toggleDrawer()"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="link-list" class="space-y-2 mb-6"></div>
+        <div class="space-y-2 pt-4 border-t border-slate-700">
+            <input id="link-name" type="text" placeholder="Resource Name" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs">
+            <input id="link-url" type="text" placeholder="URL (https://...)" class="w-full bg-black/10 border border-slate-700 p-3 rounded-lg text-xs">
+            <button onclick="addCustomLink()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-xs uppercase">Add Link</button>
+            <div class="grid grid-cols-2 gap-2 mt-4">
+                <button onclick="exportData()" class="border border-slate-700 py-2 rounded-lg text-[9px] font-bold">EXPORT</button>
+                <button onclick="clearData()" class="border border-red-900/50 text-red-500 py-2 rounded-lg text-[9px] font-bold">CLEAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stats-view" class="full-overlay overflow-y-auto p-4">
+        <div class="max-w-4xl mx-auto space-y-6 pt-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-black italic uppercase">Analytics</h2>
+                <button onclick="toggleView('main')" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5 text-white"></i></button>
+            </div>
+            <div class="glass p-4 rounded-2xl">
+                <canvas id="subjectChart" height="200"></canvas>
+            </div>
+            <div class="glass p-4 rounded-2xl">
+                <h3 class="text-[10px] font-black uppercase opacity-50 mb-4">Study Streak (28 Days)</h3>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+            </div>
+            <div id="activity-log" class="space-y-2 pb-10"></div>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto px-4 mt-6">
         <div id="subject-grid-view" class="grid grid-cols-1 gap-4"></div>
-        
         <div id="chapter-list-view" class="hidden">
-            <button onclick="showSubjects()" class="mb-4 text-blue-500 font-bold text-[10px] flex items-center gap-1 uppercase"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back</button>
+            <button onclick="showSubjects()" class="mb-4 text-blue-500 font-bold text-[10px] flex items-center gap-1 uppercase"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back to Menu</button>
             <h2 id="current-subject-title" class="text-2xl font-black italic mb-6 uppercase"></h2>
-            <div id="chapters-container" class="space-y-3"></div>
+            <div id="chapters-container" class="space-y-3 pb-24"></div>
         </div>
     </main>
 
     <div id="pomo-setup" class="full-overlay glass px-6 justify-center">
         <div class="w-full max-w-sm space-y-6">
-            <h2 class="text-2xl font-black italic uppercase text-center">Focus Settings</h2>
+            <h2 class="text-2xl font-black italic uppercase text-center">Pomo Setup</h2>
             <div class="grid grid-cols-2 gap-4">
-                <input id="pomo-study-time" type="number" value="25" class="bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold">
-                <input id="pomo-break-time" type="number" value="5" class="bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold">
+                <div class="text-center"><p class="text-[9px] font-bold opacity-50 mb-1">STUDY</p><input id="pomo-study-time" type="number" value="25" class="w-full bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold"></div>
+                <div class="text-center"><p class="text-[9px] font-bold opacity-50 mb-1">BREAK</p><input id="pomo-break-time" type="number" value="5" class="w-full bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold"></div>
             </div>
-            <button onclick="confirmPomo()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase">Start Focus</button>
+            <button onclick="confirmPomo()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase">Start Session</button>
             <button onclick="document.getElementById('pomo-setup').classList.remove('active')" class="w-full py-2 opacity-50 font-bold text-[10px] uppercase">Cancel</button>
         </div>
     </div>
@@ -108,167 +117,120 @@
         <div id="battle-stopwatch" class="text-7xl mono font-black mb-12">00:00:00</div>
         <div class="flex gap-6">
             <button id="btn-pause" onclick="togglePause()" class="w-16 h-16 rounded-full border border-yellow-500/50 flex items-center justify-center text-yellow-500"><i id="pause-icon" data-lucide="pause"></i></button>
-            <button onclick="stopBattle()" class="w-16 h-16 rounded-full border border-red-500/50 flex items-center justify-center text-red-500"><i data-lucide="square"></i></button>
+            <button onclick="stopBattle()" class="w-16 h-16 rounded-full border border-red-500/50 flex items-center justify-center text-red-500"><i data-lucide="square" class="fill-current"></i></button>
             <button onclick="markDoneBattle()" class="w-16 h-16 rounded-full border border-green-500/50 flex items-center justify-center text-green-500"><i data-lucide="check"></i></button>
+        </div>
+    </div>
+
+    <div id="mock-setup" class="full-overlay glass px-6 justify-center">
+        <div class="w-full max-w-md space-y-6 text-center">
+            <h2 class="text-2xl font-black italic uppercase">Mock Exam</h2>
+            <div id="mock-papers-list" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
+            <button onclick="document.getElementById('mock-setup').classList.remove('active')" class="w-full py-4 opacity-50 font-black text-[10px] uppercase">Cancel</button>
         </div>
     </div>
 
     <script>
         const syllabus = {
-            "FR": { chapters: ["Ind AS 1, 8, 10", "Assets", "Revenue", "Business Combination", "Consolidation", "Ethics"] },
-            "AFM": { chapters: ["Risk Mgmt", "Securities", "Portfolio", "Derivatives", "Forex", "Mergers"] },
-            "Audit": { chapters: ["SAs", "Bank Audit", "Professional Ethics", "Internal Audit", "Due Diligence"] },
-            "DT": { chapters: ["PGBP", "Capital Gains", "Trusts", "Transfer Pricing", "NR Taxation", "Assessment"] },
-            "IDT": { chapters: ["Supply", "ITC", "Registration", "Refunds", "Customs", "FTP"] },
-            "IBS": { chapters: ["Case Studies"] }
+            "Financial Reporting": { chapters: ["Ind AS 1, 8, 10, 34, 113", "Asset Based Ind AS (16, 23, 36, 37, 38, 40, 105, 116)", "Ind AS 19, 33, 102", "Ind AS 12, 21", "Ind AS 115 (Revenue)", "Financial Instruments (32, 109, 107)", "Business Combinations (103)", "Consolidated FS", "Accounting for Carbon Credits", "Professional Ethics"] },
+            "Adv Financial Mgmt": { chapters: ["Financial Policy", "Risk Mgmt", "Advanced Capital Budgeting", "Security Valuation", "Portfolio Mgmt", "Mutual Funds", "Derivatives", "Forex Mgmt", "Interest Rate Risk", "Business Valuation", "Mergers & Acquisitions", "Startup Finance"] },
+            "Auditing & Ethics": { chapters: ["Quality Control (SQC 1)", "SA 200 Series", "Audit Planning (300s)", "Audit Evidence (500s)", "Audit Reporting (700s)", "Audit of Banks", "Audit of NBFCs", "Audit of PSUs", "Internal Audit", "Due Diligence", "Sustainable Assurance", "Professional Ethics"] },
+            "Direct Tax Laws": { chapters: ["PGBP", "Capital Gains", "Other Sources & ICDS", "Assessment of Entities", "MAT / AMT", "Charitable Trusts", "Tax Planning", "TDS/TCS & Advance Tax", "Assessment Procedures", "Appeals & Penalties", "Transfer Pricing", "Non-Resident Taxation", "Black Money Act"] },
+            "Indirect Tax Laws": { chapters: ["Supply & Charge", "Place of Supply", "Time & Value of Supply", "Input Tax Credit", "Registration", "Returns & Payment", "Refunds", "Assessment & Audit", "Appeals & Penalties", "Customs: Value & Classification", "Customs: Import/Export", "FTP"] },
+            "Integrated Biz Solutions": { chapters: ["Case Study 1", "Case Study 2", "Case Study 3", "Case Study 4", "Case Study 5", "Case Study 6", "Case Study 7", "Case Study 8"] }
         };
 
-        // DATA V17 (Includes Daily Logs)
+        const examDate = new Date("May 2, 2026 09:00:00").getTime();
         let studyData = JSON.parse(localStorage.getItem('caWarRoom_V17')) || { chapters: {}, logs: {} };
-        let currentMode = 'normal';
-        let timerInterval, seconds = 0, isPaused = false, activeSub = "", activeChap = "";
+        let libraryLinks = JSON.parse(localStorage.getItem('caWarRoomLinks')) || [{ name: "ICAI BOS", url: "https://www.icai.org" }];
+        
+        let currentMode = 'normal', timerInterval, seconds = 0, isPaused = false, activeSub = "", activeChap = "";
         let chartInstance = null;
 
-        function toggleView(view) {
-            document.getElementById('stats-view').classList.toggle('active', view === 'stats');
-            if(view === 'stats') {
-                renderAnalytics();
-                renderCalendar();
-            }
+        // --- UI CORE ---
+        function toggleDrawer() { document.getElementById('library-drawer').classList.toggle('open'); renderLibrary(); }
+        function toggleView(v) { 
+            document.getElementById('stats-view').classList.toggle('active', v === 'stats'); 
+            if(v==='stats') { renderAnalytics(); renderCalendar(); }
         }
-
         function setGlobalMode(m) {
             currentMode = m;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${m}`));
         }
 
+        // --- LIBRARY ---
+        function renderLibrary() {
+            const list = document.getElementById('link-list');
+            list.innerHTML = libraryLinks.map((link, i) => `
+                <div class="flex items-center gap-2 group">
+                    <a href="${link.url}" target="_blank" class="flex-grow p-3 glass rounded-lg text-xs font-bold flex justify-between uppercase">
+                        ${link.name} <i data-lucide="external-link" class="w-3 h-3 opacity-40"></i>
+                    </a>
+                    <button onclick="deleteLink(${i})" class="p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+        function addCustomLink() {
+            const name = document.getElementById('link-name').value;
+            const url = document.getElementById('link-url').value;
+            if(name && url) {
+                libraryLinks.push({ name, url: url.startsWith('http') ? url : 'https://' + url });
+                localStorage.setItem('caWarRoomLinks', JSON.stringify(libraryLinks));
+                document.getElementById('link-name').value = ''; document.getElementById('link-url').value = ''; renderLibrary();
+            }
+        }
+        function deleteLink(i) { libraryLinks.splice(i, 1); localStorage.setItem('caWarRoomLinks', JSON.stringify(libraryLinks)); renderLibrary(); }
+
+        // --- BATTLE ENGINE ---
         function startBattle(sub, chap) {
             activeSub = sub; activeChap = chap;
             if(currentMode === 'pomo') document.getElementById('pomo-setup').classList.add('active');
             else actuallyStart(0);
         }
-
         function confirmPomo() {
             const s = parseInt(document.getElementById('pomo-study-time').value) * 60;
             document.getElementById('pomo-setup').classList.remove('active');
             actuallyStart(s);
         }
-
         function actuallyStart(pomoSec) {
             document.getElementById('battle-mode').classList.add('active');
             document.getElementById('battle-chapter').innerText = activeChap;
             document.getElementById('battle-tag').innerText = currentMode.toUpperCase();
-            seconds = pomoSec;
-            isPaused = false;
+            seconds = pomoSec; isPaused = false;
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if(!isPaused) {
-                    if(currentMode === 'pomo') {
-                        seconds--; if(seconds <= 0) stopBattle();
-                    } else {
-                        seconds++;
-                    }
+                    if(currentMode === 'pomo') { seconds--; if(seconds <= 0) stopBattle(); }
+                    else { seconds++; }
                     updateDisplay(seconds);
                 }
             }, 1000);
         }
-
         function updateDisplay(s) {
             let h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sc=s%60;
             document.getElementById('battle-stopwatch').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sc.toString().padStart(2,'0')}`;
         }
-
         function stopBattle() { commitTime(); exitBattle(); }
-        function markDoneBattle() { studyData.chapters[`${activeSub}-${activeChap}`] = { ...studyData.chapters[`${activeSub}-${activeChap}`], done: true }; stopBattle(); }
-
+        function markDoneBattle() { 
+            const k = `${activeSub}-${activeChap}`;
+            studyData.chapters[k] = { ...studyData.chapters[k], done: true };
+            stopBattle(); 
+        }
         function commitTime() {
             const today = new Date().toISOString().split('T')[0];
             let timeSpent = (currentMode === 'pomo') ? (parseInt(document.getElementById('pomo-study-time').value)*60 - seconds) : seconds;
             timeSpent = Math.max(0, timeSpent);
-
-            // Update Total Chapter Time
             const k = `${activeSub}-${activeChap}`;
             if(!studyData.chapters[k]) studyData.chapters[k] = { time: 0, done: false };
             studyData.chapters[k].time += timeSpent;
-
-            // Update Daily Log (The Calendar Logic)
             if(!studyData.logs[today]) studyData.logs[today] = {};
             if(!studyData.logs[today][activeSub]) studyData.logs[today][activeSub] = 0;
             studyData.logs[today][activeSub] += timeSpent;
-
             save();
         }
-
+        function exitBattle() { clearInterval(timerInterval); document.getElementById('battle-mode').classList.remove('active'); renderMenu(); if(activeSub !== "MOCK") renderChapters(activeSub); }
         function save() { localStorage.setItem('caWarRoom_V17', JSON.stringify(studyData)); }
-
-        function exitBattle() {
-            clearInterval(timerInterval);
-            document.getElementById('battle-mode').classList.remove('active');
-            renderMenu();
-        }
-
-        // --- ANALYTICS ENGINE ---
-        function renderAnalytics() {
-            const ctx = document.getElementById('subjectChart').getContext('2d');
-            const totals = {};
-            Object.keys(syllabus).forEach(s => totals[s] = 0);
-            
-            // Sum all logs
-            Object.values(studyData.logs).forEach(day => {
-                Object.entries(day).forEach(([sub, time]) => {
-                    if(totals[sub] !== undefined) totals[sub] += (time / 3600);
-                });
-            });
-
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(totals),
-                    datasets: [{
-                        label: 'Hours Spent',
-                        data: Object.values(totals),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } } }
-                }
-            });
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            const logList = document.getElementById('activity-log');
-            grid.innerHTML = ""; logList.innerHTML = "";
-            
-            // Render 28-day Heatmap
-            for(let i=27; i>=0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                const dayData = studyData.logs[dateStr];
-                let level = "level-0";
-                if(dayData) {
-                    const totalSec = Object.values(dayData).reduce((a,b) => a+b, 0);
-                    if(totalSec > 14400) level = "level-3"; // 4h+
-                    else if(totalSec > 7200) level = "level-2"; // 2h+
-                    else if(totalSec > 0) level = "level-1";
-                }
-                grid.innerHTML += `<div class="day-cell ${level}" title="${dateStr}"></div>`;
-            }
-
-            // Render Activity List
-            const sortedDates = Object.keys(studyData.logs).sort().reverse();
-            sortedDates.slice(0, 5).forEach(date => {
-                const subs = Object.entries(studyData.logs[date]).map(([s, t]) => `${s}: ${(t/3600).toFixed(1)}h`).join(', ');
-                logList.innerHTML += `<div class="glass p-3 rounded-xl text-xs flex justify-between">
-                    <span class="font-bold">${date}</span>
-                    <span class="opacity-60">${subs}</span>
-                </div>`;
-            });
-        }
 
         // --- NAVIGATION ---
         function renderMenu() {
@@ -277,53 +239,93 @@
                 const chapters = syllabus[sub].chapters;
                 const doneCount = chapters.filter(c => studyData.chapters[`${sub}-${c}`]?.done).length;
                 return `<div onclick="showChapters('${sub}')" class="glass p-5 rounded-2xl flex justify-between items-center active:scale-95 transition-transform">
-                    <div>
-                        <h3 class="font-black text-sm uppercase">${sub}</h3>
-                        <p class="text-[9px] text-blue-500 font-bold uppercase">${doneCount} / ${chapters.length} DONE</p>
-                    </div>
+                    <div><h3 class="font-black text-sm uppercase">${sub}</h3><p class="text-[9px] text-blue-500 font-bold uppercase">${doneCount} / ${chapters.length} DONE</p></div>
                     <i data-lucide="chevron-right" class="w-4 h-4 opacity-30"></i>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
-
         function showChapters(sub) {
-            activeSub = sub;
-            document.getElementById('subject-grid-view').classList.add('hidden');
+            activeSub = sub; document.getElementById('subject-grid-view').classList.add('hidden');
             document.getElementById('chapter-list-view').classList.remove('hidden');
-            document.getElementById('current-subject-title').innerText = sub;
+            document.getElementById('current-subject-title').innerText = sub; renderChapters(sub);
+        }
+        function renderChapters(sub) {
             const container = document.getElementById('chapters-container');
             container.innerHTML = syllabus[sub].chapters.map(chap => {
                 const d = studyData.chapters[`${sub}-${chap}`] || { time: 0, done: false };
                 return `<div class="glass p-4 rounded-xl flex items-center gap-4">
                     <input type="checkbox" ${d.done ? 'checked' : ''} onchange="toggleChapter('${sub}','${chap}')" class="w-5 h-5">
                     <div class="flex-grow" onclick="startBattle('${sub}', '${chap}')">
-                        <h4 class="text-xs font-bold">${chap}</h4>
-                        <p class="text-[9px] text-blue-500 font-bold uppercase">${(d.time/3600).toFixed(2)}h spent</p>
+                        <h4 class="text-xs font-bold leading-tight">${chap}</h4>
+                        <p class="text-[9px] text-blue-500 font-bold uppercase mt-1">${(d.time/3600).toFixed(2)}h spent</p>
                     </div>
+                    <button onclick="startBattle('${sub}', '${chap}')" class="p-2 text-blue-500"><i data-lucide="play" class="w-5 h-5"></i></button>
                 </div>`;
             }).join('');
+            lucide.createIcons();
         }
-
         function toggleChapter(sub, chap) {
             const k = `${sub}-${chap}`;
             if(!studyData.chapters[k]) studyData.chapters[k] = { time: 0, done: false };
             studyData.chapters[k].done = !studyData.chapters[k].done;
-            save();
+            save(); renderMenu();
         }
-
         function showSubjects() { 
             document.getElementById('chapter-list-view').classList.add('hidden');
             document.getElementById('subject-grid-view').classList.remove('hidden');
             renderMenu();
         }
 
-        function toggleTheme() { document.body.classList.toggle('light-mode'); }
-        function togglePause() { isPaused = !isPaused; lucide.createIcons(); }
+        // --- ANALYTICS ---
+        function renderAnalytics() {
+            const ctx = document.getElementById('subjectChart').getContext('2d');
+            const totals = {}; Object.keys(syllabus).forEach(s => totals[s] = 0);
+            Object.values(studyData.logs).forEach(day => { Object.entries(day).forEach(([sub, time]) => { if(totals[sub] !== undefined) totals[sub] += (time / 3600); }); });
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(totals), datasets: [{ label: 'Hours', data: Object.values(totals), backgroundColor: '#3b82f6', borderRadius: 8 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } } } } });
+        }
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const logList = document.getElementById('activity-log');
+            grid.innerHTML = ""; logList.innerHTML = '<h3 class="text-[10px] font-black uppercase opacity-50 mb-2">Recent Logs</h3>';
+            for(let i=27; i>=0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const dayData = studyData.logs[dateStr];
+                let level = "level-0";
+                if(dayData) {
+                    const totalSec = Object.values(dayData).reduce((a,b) => a+b, 0);
+                    level = totalSec > 14400 ? "level-3" : totalSec > 7200 ? "level-2" : totalSec > 0 ? "level-1" : "level-0";
+                }
+                grid.innerHTML += `<div class="day-cell ${level}"></div>`;
+            }
+            const sortedDates = Object.keys(studyData.logs).sort().reverse().slice(0, 5);
+            sortedDates.forEach(date => {
+                const subs = Object.entries(studyData.logs[date]).map(([s, t]) => `${s}: ${(t/3600).toFixed(1)}h`).join(', ');
+                logList.innerHTML += `<div class="glass p-3 rounded-xl text-[10px] flex justify-between font-bold uppercase"><span>${date}</span><span class="opacity-50">${subs}</span></div>`;
+            });
+        }
 
-        // Initial Launch
+        // --- MOCK ---
+        function openMockSetup() {
+            const list = document.getElementById('mock-papers-list');
+            list.innerHTML = Object.keys(syllabus).map((sub, i) => `<button onclick="startMock('Paper ${i+1}: ${sub}')" class="w-full p-4 rounded-xl border border-slate-700 text-left font-bold text-sm glass">Paper ${i+1}: ${sub}</button>`).join('');
+            document.getElementById('mock-setup').classList.add('active');
+        }
+        function startMock(paper) {
+            activeSub = "MOCK"; activeChap = paper; document.getElementById('mock-setup').classList.remove('active');
+            actuallyStart(900); // 15m reading
+        }
+
+        // --- SYSTEM ---
+        function toggleTheme() { document.body.classList.toggle('light-mode'); }
+        function togglePause() { isPaused = !isPaused; document.getElementById('pause-icon').setAttribute('data-lucide', isPaused ? 'play' : 'pause'); lucide.createIcons(); }
+        function exportData() { const blob = new Blob([JSON.stringify(studyData)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'WarRoom_Backup.json'; a.click(); }
+        function clearData() { if(confirm("Clear all?")) { localStorage.clear(); location.reload(); } }
+        setInterval(() => { const diff = examDate - Date.now(); const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000); document.getElementById("countdown").innerHTML = `${d}D : ${h}H : ${m}M : ${s}S TO MAY '26`; }, 1000);
+
         renderMenu();
-        toggleView('stats'); // Start with the new Stats view
     </script>
 </body>
 </html>
