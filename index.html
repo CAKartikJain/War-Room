@@ -118,14 +118,133 @@
         // Core syllabus remains unchanged
         const examDate = new Date("May 2, 2026 09:00:00").getTime();
         const syllabus = {
-            "Financial Reporting": { icon: "landmark", chapters: ["Ind AS 1-116 Full", "Consolidation", "Business Combo", "Financial Instruments", "Share Based Payments", "Ethics in FR"] },
-            "Adv Financial Mgmt": { icon: "trending-up", chapters: ["Risk Management", "Security Valuation", "Portfolio Mgmt", "Derivatives", "Forex", "Business Valuation"] },
-            "Auditing & Ethics": { icon: "scale", chapters: ["Quality Control", "Standards on Auditing", "Bank Audit", "NBFC Audit", "Professional Ethics"] },
-            "Direct Tax Laws": { icon: "pie-chart", chapters: ["PGBP", "Capital Gains", "TDS/TCS", "Assessment", "Transfer Pricing", "NR Taxation"] },
-            "Indirect Tax Laws": { icon: "shopping-cart", chapters: ["Supply under GST", "ITC", "Place of Supply", "Refunds", "Customs Levy", "FTP"] },
-            "Integrated Biz Solutions": { icon: "layers", chapters: ["IBS Case Study 1", "IBS Case Study 2", "IBS Case Study 3", "IBS Case Study 4", "IBS Case Study 5"] }
+            "Financial Reporting": { 
+                icon: "landmark", 
+                chapters: [
+                    "Intro & Conceptual Framework", 
+                    "Ind AS 1, 34, 8, 10, 113", 
+                    "Ind AS 2, 16, 116, 23, 36, 38, 40, 105, 37", 
+                    "Ind AS 115 (Revenue)", 
+                    "Ind AS 19, 102", 
+                    "Ind AS 12, 21", 
+                    "Ind AS 24, 33, 108", 
+                    "Business Combinations (Ind AS 103)", 
+                    "Consolidated FS (Ind AS 110, 111, 112, 28, 27)", 
+                    "Financial Instruments (Ind AS 32, 109, 107)", 
+                    "Accounting for Carbon Credits", 
+                    "Integrated Reporting", 
+                    "CSR Reporting", 
+                    "Professional Ethics in FR"
+                ] 
+            },
+            "Adv Financial Mgmt": { 
+                icon: "trending-up", 
+                chapters: [
+                    "Financial Policy & Corp Strategy", 
+                    "Risk Management", 
+                    "Advanced Capital Budgeting Decisions", 
+                    "Security Analysis", 
+                    "Security Valuation", 
+                    "Portfolio Management", 
+                    "Securitization", 
+                    "Mutual Funds", 
+                    "Derivatives Analysis & Valuation", 
+                    "Foreign Exchange Management", 
+                    "International Financial Management", 
+                    "Interest Rate Risk Management", 
+                    "Business Valuation", 
+                    "Mergers, Acquisitions & Restructuring", 
+                    "Startup Finance"
+                ] 
+            },
+            "Auditing & Ethics": { 
+                icon: "scale", 
+                chapters: [
+                    "Quality Control (SQC 1, SA 220)", 
+                    "General Principles (SA 200, 210, 230, 240, 250, 260, 299)", 
+                    "Audit Planning & Risk (SA 300, 315, 320, 330)", 
+                    "Audit Evidence (SA 500-580)", 
+                    "Using Work of Others (SA 600, 610, 620)", 
+                    "Audit Conclusions & Reporting (SA 700-720)", 
+                    "Specialized Areas (SA 800, 805, 810)", 
+                    "Related Services (SRE, SAE, SRS)", 
+                    "Audit of Banks", 
+                    "Audit of NBFCs", 
+                    "Audit of PSUs", 
+                    "Internal Audit", 
+                    "Due Diligence, Investigation & Forensic Audit", 
+                    "Sustainable Development Goals (SDG) Assurance", 
+                    "Professional Ethics & Liabilities"
+                ] 
+            },
+            "Direct Tax Laws": { 
+                icon: "pie-chart", 
+                chapters: [
+                    "Basic Concepts & Tax Rates", 
+                    "Residence & Scope of Total Income", 
+                    "Incomes which do not form part of Total Income", 
+                    "Profits and Gains of Business or Profession (PGBP)", 
+                    "Capital Gains", 
+                    "Income from Other Sources", 
+                    "Income Computation & Disclosure Standards (ICDS)", 
+                    "Clubbing & Set-off of Losses", 
+                    "Deductions & Alternate Minimum Tax (AMT)", 
+                    "Assessment of Various Entities (Firms/AOP/BOI)", 
+                    "Assessment of Companies & MAT", 
+                    "Charitable/Religious Trusts & Institutions", 
+                    "Tax Planning & Avoidance", 
+                    "TDS, TCS & Advance Tax", 
+                    "Assessment Procedures & Returns", 
+                    "Appeals, Revision & Dispute Resolution", 
+                    "Penalties & Offences", 
+                    "Transfer Pricing", 
+                    "Non-Resident Taxation", 
+                    "Double Taxation Relief (DTAA)", 
+                    "Advance Rulings", 
+                    "Black Money Act"
+                ] 
+            },
+            "Indirect Tax Laws": { 
+                icon: "shopping-cart", 
+                chapters: [
+                    "GST: Supply under GST", 
+                    "GST: Charge of Tax", 
+                    "GST: Place of Supply", 
+                    "GST: Time and Value of Supply", 
+                    "GST: Input Tax Credit (ITC)", 
+                    "GST: Registration", 
+                    "GST: Tax Invoice, Credit & Debit Notes", 
+                    "GST: Accounts & Records; E-way Bills", 
+                    "GST: Payment of Tax", 
+                    "GST: Returns", 
+                    "GST: Refunds", 
+                    "GST: Assessment & Audit", 
+                    "GST: Inspection, Search, Seizure & Arrest", 
+                    "GST: Demands & Recovery", 
+                    "GST: Appeals & Revision", 
+                    "GST: Offences & Penalties", 
+                    "GST: Ethical Aspects", 
+                    "Customs: Levy & Exemptions", 
+                    "Customs: Classification & Valuation", 
+                    "Customs: Import, Export & Transit Procedures", 
+                    "Customs: Warehousing & Duty Drawback", 
+                    "Foreign Trade Policy (FTP)"
+                ] 
+            },
+            "Integrated Biz Solutions": { 
+                icon: "layers", 
+                chapters: [
+                    "IBS Matrix: Corporate & Economic Laws (SPOM Set A)", 
+                    "IBS Matrix: Strategic Cost & Performance Mgmt (SPOM Set B)", 
+                    "IBS Matrix: Financial Reporting Integration", 
+                    "IBS Matrix: AFM Integration", 
+                    "IBS Matrix: Auditing Integration", 
+                    "IBS Matrix: Direct Tax Integration", 
+                    "IBS Matrix: Indirect Tax Integration", 
+                    "Case Study Practice Sets"
+                ] 
+            }
         };
-
         let studyData = JSON.parse(localStorage.getItem('caWarRoomDataV16')) || {};
         let libraryLinks = JSON.parse(localStorage.getItem('caWarRoomLinksV16')) || [{ name: "ICAI BOS", url: "https://www.icai.org" }];
         
