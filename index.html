@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CA Final | War Room V17.4</title>
+    <title>CA Final | War Room V17.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -73,18 +73,6 @@
         </div>
     </main>
 
-    <div id="stats-view" class="full-overlay overflow-y-auto p-4">
-        <div class="max-w-4xl mx-auto space-y-6 pt-4">
-            <div class="flex justify-between items-center"><h2 class="text-2xl font-black italic uppercase">Analytics</h2><button onclick="toggleView('main')" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5 text-white"></i></button></div>
-            <div class="glass p-4 rounded-2xl"><canvas id="subjectChart" height="200"></canvas></div>
-            <div class="glass p-4 rounded-2xl">
-                <h3 class="text-[10px] font-black uppercase opacity-50 mb-4">Study Streak (28 Days)</h3>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
-            </div>
-            <div id="activity-log" class="space-y-2 pb-10"></div>
-        </div>
-    </div>
-
     <div id="battle-mode" class="full-overlay px-4 justify-center items-center">
         <div id="battle-tag" class="px-4 py-1 rounded-full text-[10px] font-black uppercase bg-blue-600 mb-4"></div>
         <h2 id="battle-chapter" class="text-2xl font-black italic text-center mb-8 leading-tight"></h2>
@@ -104,12 +92,11 @@
                 <input id="pomo-break-time" type="number" value="5" class="w-full bg-black/20 border border-slate-700 p-4 rounded-xl text-center font-bold">
             </div>
             <button onclick="confirmPomo()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase">Start Focus</button>
-            <button onclick="document.getElementById('pomo-setup').classList.remove('active')" class="w-full py-2 opacity-50 font-bold text-[10px] uppercase">Cancel</button>
         </div>
     </div>
 
     <script>
-        // --- THE EXHAUSTIVE SYLLABUS (DOUBLE CHECKED) ---
+        // SYLLABUS - EXHAUSTIVE LIST
         const syllabus = {
             "Financial Reporting": { chapters: ["Ind AS 1, 8, 10, 34, 113", "Asset Based Ind AS (16, 23, 36, 37, 38, 40, 105, 116)", "Ind AS 19, 33, 102", "Ind AS 12, 21", "Ind AS 115 (Revenue)", "Financial Instruments (32, 109, 107)", "Business Combinations (103)", "Consolidated FS", "Accounting for Carbon Credits", "Professional Ethics"] },
             "Adv Financial Mgmt": { chapters: ["Financial Policy", "Risk Mgmt", "Advanced Capital Budgeting", "Security Valuation", "Portfolio Mgmt", "Mutual Funds", "Derivatives", "Forex Mgmt", "Interest Rate Risk", "Business Valuation", "Mergers & Acquisitions", "Startup Finance"] },
@@ -123,27 +110,44 @@
         let studyData = JSON.parse(localStorage.getItem('caWarRoom_V17')) || { chapters: {}, logs: {} };
         let libraryLinks = JSON.parse(localStorage.getItem('caWarRoomLinks')) || [{ name: "ICAI BOS", url: "https://www.icai.org" }];
         
-        // --- TIMER ENGINE (CLOCK-SYNCED) ---
+        // SOUND ENGINE (SYNTHESIZED)
+        const StudyAudio = {
+            ctx: null,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play(type) {
+                this.init(); const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                if (type === 'start') {
+                    osc.frequency.setValueAtTime(880, this.ctx.currentTime); 
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.5);
+                } else {
+                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(330, this.ctx.currentTime + 0.8);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1);
+                }
+                osc.start(); osc.stop(this.ctx.currentTime + 1);
+            }
+        };
+
+        // CLOCK-SYNC TIMER CORE
         let currentMode = 'normal', timerInterval, isPaused = false, activeSub = "", activeChap = "";
         let startTime = 0, accumulatedTime = 0, targetPomoSec = 0;
-        let chartInstance = null;
-
-        function toggleDrawer() { document.getElementById('library-drawer').classList.toggle('open'); renderLibrary(); }
-        function toggleView(v) { document.getElementById('stats-view').classList.toggle('active', v === 'stats'); if(v==='stats'){renderAnalytics(); renderCalendar();} }
-        function setGlobalMode(m) { currentMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${m}`)); }
 
         function startBattle(sub, chap) {
             activeSub = sub; activeChap = chap;
             if(currentMode === 'pomo') document.getElementById('pomo-setup').classList.add('active');
             else { accumulatedTime = 0; actuallyStart(); }
         }
+
         function confirmPomo() {
             targetPomoSec = parseInt(document.getElementById('pomo-study-time').value) * 60;
             accumulatedTime = 0;
             document.getElementById('pomo-setup').classList.remove('active');
             actuallyStart();
         }
+
         function actuallyStart() {
+            StudyAudio.play('start');
             document.getElementById('battle-mode').classList.add('active');
             document.getElementById('battle-chapter').innerText = activeChap;
             document.getElementById('battle-tag').innerText = currentMode.toUpperCase();
@@ -152,18 +156,18 @@
             clearInterval(timerInterval);
             timerInterval = setInterval(updateTimerLogic, 100);
         }
+
         function updateTimerLogic() {
             if(isPaused) return;
             let elapsedSinceStart = Math.floor((Date.now() - startTime) / 1000);
             let totalCurrentSessionTime = accumulatedTime + elapsedSinceStart;
             if(currentMode === 'pomo') {
                 let remaining = targetPomoSec - totalCurrentSessionTime;
-                if(remaining <= 0) { stopBattle(); return; }
+                if(remaining <= 0) { StudyAudio.play('end'); stopBattle(); return; }
                 updateDisplay(remaining);
-            } else {
-                updateDisplay(totalCurrentSessionTime);
-            }
+            } else { updateDisplay(totalCurrentSessionTime); }
         }
+
         function togglePause() {
             if(!isPaused) accumulatedTime += Math.floor((Date.now() - startTime) / 1000);
             else startTime = Date.now();
@@ -171,16 +175,19 @@
             document.getElementById('pause-icon').setAttribute('data-lucide', isPaused ? 'play' : 'pause');
             lucide.createIcons();
         }
+
         function updateDisplay(s) {
             let h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sc=s%60;
             document.getElementById('battle-stopwatch').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sc.toString().padStart(2,'0')}`;
         }
-        function stopBattle() { commitTime(); exitBattle(); }
+
+        function stopBattle() { commitTime(); StudyAudio.play('end'); exitBattle(); }
         function markDoneBattle() { 
             const k = `${activeSub}-${activeChap}`;
             studyData.chapters[k] = { ...studyData.chapters[k], done: true };
             stopBattle(); 
         }
+
         function commitTime() {
             const today = new Date().toISOString().split('T')[0];
             let finalSessionSec = accumulatedTime + (isPaused ? 0 : Math.floor((Date.now() - startTime) / 1000));
@@ -192,10 +199,23 @@
             studyData.logs[today][activeSub] += Math.max(0, finalSessionSec);
             save();
         }
+
         function exitBattle() { clearInterval(timerInterval); document.getElementById('battle-mode').classList.remove('active'); renderMenu(); if(activeSub !== "MOCK") renderChapters(activeSub); }
         function save() { localStorage.setItem('caWarRoom_V17', JSON.stringify(studyData)); }
 
-        // --- UI RENDERING ---
+        // NAVIGATION & UI
+        function showSubjects() { 
+            document.getElementById('chapter-list-view').classList.add('hidden'); 
+            document.getElementById('subject-grid-view').classList.remove('hidden'); 
+            renderMenu(); 
+        }
+
+        function showChapters(sub) {
+            activeSub = sub; document.getElementById('subject-grid-view').classList.add('hidden');
+            document.getElementById('chapter-list-view').classList.remove('hidden');
+            document.getElementById('current-subject-title').innerText = sub; renderChapters(sub);
+        }
+
         function renderMenu() {
             const container = document.getElementById('subject-grid-view');
             container.innerHTML = Object.keys(syllabus).map(sub => {
@@ -208,11 +228,7 @@
             }).join('');
             lucide.createIcons();
         }
-        function showChapters(sub) {
-            activeSub = sub; document.getElementById('subject-grid-view').classList.add('hidden');
-            document.getElementById('chapter-list-view').classList.remove('hidden');
-            document.getElementById('current-subject-title').innerText = sub; renderChapters(sub);
-        }
+
         function renderChapters(sub) {
             const container = document.getElementById('chapters-container');
             container.innerHTML = syllabus[sub].chapters.map(chap => {
@@ -228,52 +244,24 @@
             }).join('');
             lucide.createIcons();
         }
+
         function toggleChapter(sub, chap) {
             const k = `${sub}-${chap}`;
             if(!studyData.chapters[k]) studyData.chapters[k] = { time: 0, done: false };
             studyData.chapters[k].done = !studyData.chapters[k].done;
             save(); renderMenu();
         }
-        function showSubjects() { document.getElementById('chapter-list-view').classList.add('hidden'); document.getElementById('subject-grid-view').classList.remove('hidden'); renderMenu(); }
 
-        function renderLibrary() {
-            const list = document.getElementById('link-list');
-            list.innerHTML = libraryLinks.map((link, i) => `
-                <div class="flex items-center gap-2 group">
-                    <a href="${link.url}" target="_blank" class="flex-grow p-3 glass rounded-lg text-xs font-bold flex justify-between uppercase">${link.name} <i data-lucide="external-link" class="w-3 h-3 opacity-40"></i></a>
-                    <button onclick="deleteLink(${i})" class="p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>`).join('');
-            lucide.createIcons();
-        }
-        function addCustomLink() {
-            const name = document.getElementById('link-name').value; const url = document.getElementById('link-url').value;
-            if(name && url) { libraryLinks.push({ name, url: url.startsWith('http') ? url : 'https://' + url }); localStorage.setItem('caWarRoomLinks', JSON.stringify(libraryLinks)); document.getElementById('link-name').value = ''; document.getElementById('link-url').value = ''; renderLibrary(); }
-        }
-        function deleteLink(i) { libraryLinks.splice(i, 1); localStorage.setItem('caWarRoomLinks', JSON.stringify(libraryLinks)); renderLibrary(); }
-
-        function renderAnalytics() {
-            const ctx = document.getElementById('subjectChart').getContext('2d');
-            const totals = {}; Object.keys(syllabus).forEach(s => totals[s] = 0);
-            Object.values(studyData.logs).forEach(day => { Object.entries(day).forEach(([sub, time]) => { if(totals[sub] !== undefined) totals[sub] += (time / 3600); }); });
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(totals), datasets: [{ label: 'Hours', data: Object.values(totals), backgroundColor: '#3b82f6', borderRadius: 8 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } } } } });
-        }
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid'); const logList = document.getElementById('activity-log');
-            grid.innerHTML = ""; logList.innerHTML = '<h3 class="text-[10px] font-black uppercase opacity-50 mb-2">Recent Logs</h3>';
-            for(let i=27; i>=0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toISOString().split('T')[0]; const dayData = studyData.logs[dateStr]; let level = "level-0";
-                if(dayData) { const totalSec = Object.values(dayData).reduce((a,b) => a+b, 0); level = totalSec > 14400 ? "level-3" : totalSec > 7200 ? "level-2" : totalSec > 0 ? "level-1" : "level-0"; }
-                grid.innerHTML += `<div class="day-cell ${level}" title="${dateStr}"></div>`;
-            }
-            const sortedDates = Object.keys(studyData.logs).sort().reverse().slice(0, 5);
-            sortedDates.forEach(date => { const subs = Object.entries(studyData.logs[date]).map(([s, t]) => `${s}: ${(t/3600).toFixed(1)}h`).join(', '); logList.innerHTML += `<div class="glass p-3 rounded-xl text-[10px] flex justify-between font-bold uppercase"><span>${date}</span><span class="opacity-50">${subs}</span></div>`; });
-        }
-
+        function setGlobalMode(m) { currentMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${m}`)); }
+        function toggleDrawer() { document.getElementById('library-drawer').classList.toggle('open'); renderLibrary(); }
         function toggleTheme() { document.body.classList.toggle('light-mode'); }
-        function exportData() { const blob = new Blob([JSON.stringify(studyData)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'WarRoom_Backup.json'; a.click(); }
-        function clearData() { if(confirm("Clear all?")) { localStorage.clear(); location.reload(); } }
-        setInterval(() => { const diff = examDate - Date.now(); const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000); document.getElementById("countdown").innerHTML = `${d}D : ${h}H : ${m}M : ${s}S TO MAY '26`; }, 1000);
+
+        // INITIALIZE
+        setInterval(() => {
+            const diff = examDate - Date.now();
+            const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+            document.getElementById("countdown").innerHTML = `${d}D : ${h}H : ${m}M : ${s}S TO MAY '26`;
+        }, 1000);
 
         renderMenu();
     </script>
